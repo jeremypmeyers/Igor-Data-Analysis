@@ -1,4 +1,6 @@
 ﻿function Formation()
+//creates standard formation charts: average and SEM of voltage and current vs.
+//run time and calls formationtopofcharge() to calculate summary statistics.
 setdatafolder root:
 string comparechart = "baselinerunchart"
 excludeBaddata(comparechart)
