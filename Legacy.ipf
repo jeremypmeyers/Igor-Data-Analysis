@@ -3,6 +3,11 @@
 
 function architectureupdate()
 setdatafolder root:
+string doit,menustr
+menustr="Yes;No"
+Prompt doit, "Update to v 1.0 architecture?"  , popup, menustr 
+doprompt "Expt needs update for v1.0 of BDS/MRD analysis package.", doit
+if (cmpstr(doit,"Yes")==0)
 svar /Z vwavename
 svar /Z curwavename
 svar /Z totaltimename
@@ -14,7 +19,7 @@ svar /Z cyclename
 nvar /Z timeunits
 
 setdatafolder root:
-variable /G procedureversion=1.0
+variable /G procedureversion=0.9
 variable typeindex=0
 do
 	string typename= GetIndexedObjName(":",4,typeindex)
@@ -105,4 +110,8 @@ do
 while(1)
 	setdatafolder root:
 	variable /g procedureversion=1.0
+	print "Experiment was updated."
+else
+	print "The experiment was not updated."
+endif
 end

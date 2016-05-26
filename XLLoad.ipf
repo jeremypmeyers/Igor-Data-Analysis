@@ -221,6 +221,7 @@ variable index=0
 do
 	setdatafolder root:
 	currentsheetname=importedsheetnames[index]
+	nvar loadcount
 	currentfoldername=""
 	string battypeprompt="Enter variable type for data from "+currentsheetname
 	if (Qnamingprotocol==1)
@@ -278,6 +279,7 @@ do
 	variable /G red=r
 	variable /G green=g
 	variable /G blue=b
+	variable /G loadorder=loadcount
 	setdatafolder root:
 	index+=1
 while (index<numpnts(importedsheetnames))
@@ -332,13 +334,10 @@ string loadtype
 		prompt rightcolumn, "What's the right-most column to input?"
 		prompt headernamerow, "Which row contains wave/column header names?"
 		prompt deducetyperow, "Which row should we use to deduce whether a column is number or string?"
-		DoPrompt "Which rows and columns to input",leftcell, rightcolumn, headernamerow, deducetyperow
+		prompt sheetname, "Is there a sheet name to input? Leave blank to input first sheet"
+		DoPrompt "What should we input?",leftcell, rightcolumn, headernamerow, deducetyperow,sheetname
 		deducecolumns=1
 	else
-		prompt leftcell, "What is the top left-most cell to input?"
-		prompt rightcolumn, "What's the right-most column to input?"
-		prompt headernamerow, "Which row contains wave/column header names?"
-		prompt deducetyperow, "Which row should we use to deduce whether a column is number or string?"
 		if (cmpstr(loadtype,"Eclipse 9-variable format")==0)
 			leftcell="A2"
 			rightcolumn="I"

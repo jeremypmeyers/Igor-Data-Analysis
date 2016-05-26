@@ -44,10 +44,6 @@ menu "Battery Analysis"
 		"Modify chart for presentation, half-size", PrepGraphForPresentationHalf()
 
 	end
-	Submenu "MRD 2V cell testing"
-		"Formation", Formation() 
-		"Reserve Capacity", ArbinRC() 
-	end
 
 end
 
@@ -57,7 +53,15 @@ macro LoadBatteryData()
 endmacro
 
 function LoadBatData()
-	String loadtypes= "MRD Arbin;MRD Bitrode;MRD Solartron;Iontensity;Eclipse 9-variable format;Eclipse 10-variable format;Eclipse 20-variable format;Single Excel file;Single CSV file;Single Text File;All Excel files in a folder;All CSV files in a folder;Instron" 
+	setdatafolder root:
+	nvar /Z loadcount
+	if (!nvar_exists(loadcount))
+		variable /G loadcount = 1
+	else
+		loadcount+=1
+	endif
+	
+	String loadtypes= "Arbin;Bitrode;Eclipse 9-variable format;Eclipse 10-variable format;Eclipse 20-variable format;Single Excel file;Single CSV file;Single Text File;All Excel files in a folder;All CSV files in a folder;Instron" 
 	String loadtype
 	if (IgorVersion()>=7)
 		execute("SetIgorOption PanelResolution = 0")
@@ -89,17 +93,15 @@ variable done=0
 
 	
 	strswitch(loadtype)
-		case "MRD Arbin":
+		case "Arbin":
 			XLLoad(loadtype="Arbin")
 			StandardWavenames(loadtype="Arbin")
 			break
-		case "MRD Bitrode":
+		case "Bitrode":
 			LoadAllCSVs(loadtype="Bitrode")
 			StandardWaveNames(loadtype="Bitrode")
 			break
-		case "MRD Solartron":
-			print "Procedures not in place yet"
-			break
+
 		case "Eclipse 9-variable format":
 			LoadAllExcel(loadtype="Eclipse 9-variable format")
 			StandardWaveNames(loadtype="Eclipse 9-variable format")
