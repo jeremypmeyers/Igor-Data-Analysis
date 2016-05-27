@@ -1,17 +1,21 @@
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 // procedures for load Excel files
-// latest update: April 30, 2015
+// latest update: May 27, 2016
 
 function XLLoad([loadtype])
 string loadtype
-
- 
+//This function figures out which Excel file to import via the getXLfile function.
+//It then determines which sheets from that user-selected Excel file to import by calling
+//the SelectSheets function.
+//It then calls InputSheets to populate the data from each sheet in the appropriate
+// root:Type:Battery: subfolder.
+//The sheet selection process temporarily creates some textwaves to keep track of information.
+//These waves are deleted and cleaned up with the cleanupfrom XLLoadfunction.
 string filename = getXLfile() 					//prompts user to select Excel file for input
-
 if (paramisdefault(loadtype))
 	SelectSheets(filename)
 else
-	SelectSheets(filename,loadtype=loadtype) 			//generates a text wave "importedsheetnames" of the sheet names to input
+	SelectSheets(filename,loadtype=loadtype) 	//generates a text wave "importedsheetnames" of the sheet names to input
 endif
 
 if (paramisdefault(loadtype))
@@ -23,16 +27,21 @@ cleanupfromXLLoad()
 end
 
 function /S getXLfile()
+
 variable refnum=11
 String message = "Select Excel File for input"
-string outputPath
-string fileFilters = "Excel Files (*.xls, *.xlsx,*xlsm): .xls,.xlsx, .xlsm ;"
-	   fileFilters+= "All Files :.*;"
-Open /D /R /F=fileFilters /M=message refnum // Sets S_fileName
+string outputPath																			
+string fileFilters = "Excel Files (*.xls, *.xlsx,*xlsm): .xls,.xlsx, .xlsm ;" 
+//This creates a filter to highlight Excel files
+	   fileFilters+= "All Files :.*;"													
+//Also allows the user to select from all files if extensions are wrong.
+
+Open /D /R /F=fileFilters /M=message refnum // Prompts user to select file and saves path to chosen file as S_filename
 outputPath = S_filename
+
 if (strlen(S_filename)==0)
 	Print "Cancelled opening file"
-	Abort
+	Abort //If user cancels, aborts load.
 endif
 notebook Recording text="Loading from Excel file:\r"+outputPath+"\r"
 return outputPath
@@ -422,7 +431,7 @@ string loadtype
 			
 			string bottomrightcell = rightcolumn+num2str(99999)
 			if (deducecolumns==1)
-				XLLoadWave /R=($leftcell,$bottomrightcell)/C=(deducetyperow) /W=(headernamerow) /Q /P=temporarypath  filename
+				XLLoadWave /R=($leftcell,$bottomrightcell)/S=sheetname /C=(deducetyperow) /W=(headernamerow) /Q /P=temporarypath  filename
 			else
 				if (cmpstr(loadtype,"Eclipse 9-variable format")==0)
 					string coltstring="1T2N1T5N"
