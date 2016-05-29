@@ -177,7 +177,7 @@ variable numberofvariables
 	Prompt vartype9,"Enter name/desigation for variable type 9"
 	Prompt vartype10,"Enter name/desigation for variable type 10"
 	string promptitle="Enter variable names (begin with letter,no special chars)"
-	do
+	
 	switch (numberofvariables)
 		case 1: 
 			DoPrompt promptitle,vartype1
@@ -265,21 +265,17 @@ variable numberofvariables
 			varnames[9]=vartype10
 			break
 	endswitch
-	variable oktoproceed=0
-	variable varnamecheck=0
-	do
-		oktoproceed += abs( cmpstr(varnames[varnamecheck],possiblyquotename(varnames[varnamecheck]) ) )
-		varnamecheck+=1
-	while (varnamecheck<numpnts(varnames))
-	
-	if (oktoproceed!=0)
-		promptitle= "Used space/special character. Check and re-enter."
-	endif
-while (oktoproceed!=0)
+	//varnames = cleanupname(varnames,1)
+	//varnames = uniquename(varnames,11,0)
+
 	variable index=0
 	string varname
 	do
 		varname = varnames[index]
+		varname = cleanupname(varname,1)
+		if (checkname(varname,11)!=0)
+			varname = uniquename(varname,11,1)
+		endif
 		setdatafolder root:
 		newdatafolder $varname
 		index+=1
@@ -407,6 +403,8 @@ do
 		setdatafolder $batteryname
 		
 		checkbxname = "cb" + typename+batteryname
+		checkbxname = cleanupname(checkbxname,0)
+
 		comv=0
 		CheckBox $checkbxname, win=$panelname, fsize=14, font="Arial", value=comv,pos={1,1+index*rowheight},title=(typename+" "+batteryname)
 		setdatafolder root:
@@ -444,6 +442,8 @@ do
 		setdatafolder $batteryname
 		
 		checkbxname = "cb" + typename+batteryname
+		checkbxname = cleanupname(checkbxname,0)
+
 		controlinfo /W=$panelname $checkbxname
 		variable /G skip=V_value
 
@@ -945,8 +945,8 @@ do
 					wave  Current
 					wave RunTime
 
-					string vname = "V"+typename+batteryname
-					string aname = "A"+typename+batteryname
+					string vname = cleanupname("V"+typename+batteryname,0)
+					string aname = cleanupname("A"+typename+batteryname,0)
 					appendtograph /W=baselinerunchart /L=V voltage /TN=$vname vs RunTime
 					appendtograph /W=baselinerunchart /L=A current /TN=$aname vs RunTime
 					modifygraph /W=baselinerunchart rgb($vname) = (red,green,blue)

@@ -56,34 +56,30 @@ string loadtype
 	string menulist=""
 	string objName
 	variable findex=0
-	do
-		objName = GetIndexedObjName(":", 4, findex)
-		if (strlen(objName) == 0)
-			break
-		endif
-		if (findex>0)
-			menulist+=";"
-		endif
-		menulist+= objName
-		findex += 1
-	while(1)
+	objName = GetIndexedObjName(":", 4, findex)
+	if (strlen(objName) == 0)
+		break
+	endif
+	if (findex>0)
+		menulist+=";"
+	endif
+	menulist+= objName
+	findex += 1
+
 	menulist+=";Skip this file"
 	string currentbattype=GetIndexedObjName(":",4,0)
 	prompt currentbattype,battypeprompt,popup,menulist
 	string promptstring="Info for data from "+filename
 	variable foldernamecheck
-	do
-		foldernamecheck=0
+	foldernamecheck=0
 		doprompt promptstring,currentbattype,foldername
-		if (strsearch(foldername, "Bat", 0) !=0)
-			foldername="Bat"+foldername
+		if (cmpstr(currentbattype,"Skip this file")!=0)
+			foldername = cleanupname(foldername,1)
+			if (checkname(foldername,11)!=0)
+				foldername = uniquename(foldername,11,1)
+			endif
 		endif
-		if  (cmpstr(foldername, possiblyquotename(foldername))!=0)
-			foldernamecheck=1
-			promptstring = "Spaces/special characters used. Please re-enter."
-		endif
-		foldernamecheck*=cmpstr(currentbattype,"Skip this file")
-	while (foldernamecheck !=0)
+		
 	if (cmpstr(currentbattype,"Skip this file")!=0)
 	
 	setdatafolder $currentbattype

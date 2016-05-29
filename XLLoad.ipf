@@ -263,16 +263,12 @@ do
 	currentbattype=GetIndexedObjName(":",4,0)
 	prompt currentbattype,battypeprompt,popup,menulist
 	string promptstring="Info for data from "+currentsheetname
-	variable foldernamecheck
-	do
-		foldernamecheck=0
-		doprompt promptstring,currentbattype,currentfoldername
-		currentfoldername = "Bat" + currentfoldername
-		if (cmpstr(currentfoldername,possiblyquotename(currentfoldername))!=0)
-			foldernamecheck=1
-			promptstring = "Spaces/special characters used. Please re-enter."
-		endif
-	while (foldernamecheck !=0)
+	doprompt promptstring,currentbattype,currentfoldername
+	
+	currentfoldername = cleanupname(currentfoldername,1)
+	if (checkname(currentfoldername,11)!=0)
+		currentfoldername = uniquename(currentfoldername,11,1)
+	endif
 	
 	setdatafolder $currentbattype
 	nvar red,green,blue
@@ -408,17 +404,14 @@ string loadtype
 		prompt currentbattype,battypeprompt,popup,menulist
 		string promptstring="Info for data from "+filename
 		variable foldernamecheck
-		do
-			foldernamecheck=0
-			doprompt promptstring,currentbattype,foldername,leftcell,rightcolumn,headernamerow,deducetyperow
-			if  (cmpstr(foldername, possiblyquotename(foldername))!=0)
-				foldernamecheck=1
-				promptstring = "Spaces/special characters used. Please re-enter."
+
+		foldernamecheck=0
+		doprompt promptstring,currentbattype,foldername,leftcell,rightcolumn,headernamerow,deducetyperow
+		if (cmpstr(currentbattype,"Skip this file")!=0)		
+			foldername = cleanupname(foldername,1)
+			if (checkname(foldername,11)!=0)
+				foldername = uniquename(foldername,11,1)
 			endif
-			foldernamecheck*=cmpstr(currentbattype,"Skip this file")
-		while (foldernamecheck !=0)
-		if (cmpstr(currentbattype,"Skip this file")!=0)
-			foldername="Bat"+foldername
 			setdatafolder $currentbattype
 			nvar red,green,blue
 			variable r=red

@@ -61,312 +61,6 @@ while(1)
 end
 
 
-function AverageandSEMbytypeWave([ywaven,xwaven,chartname,SEMplot,oktoadd])
-string ywaven, xwaven, chartname
-variable oktoadd
-variable SEMplot
-string legendtext=""
-variable leftaxes=0
-setdatafolder root:
-variable typeindex=0
-if (paramisdefault(xwaven) )
-variable baseline=0
-do
-	string typename= GetIndexedObjName(":",4,typeindex)
-	if (strlen(typename)==0)
-		break
-	endif
-	setdatafolder $typename
-	nvar /Z skip
-	if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
-			variable batteryindex=0
-			do
-				string batteryname=GetIndexedObjName(":",4,batteryindex)
-				if (strlen(batteryname)==0)
-					break
-				endif
-				setdatafolder $batteryname
-				nvar /Z skip
-				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
-					if (baseline==0)
-						string menustr = WaveList("*", ";", "" )
-						prompt ywaven, "Which wave do you want average and SEM for?", popup, menustr
-						prompt xwaven, "Which wave is the independent variable we want common values for?", popup, menustr
-						doprompt "Select waves for average/SEM calculation", ywaven,xwaven
-						if (v_flag==1)
-							killwindow averageSEMchart
-							Print "User clicked cancel"
-							Abort
-						endif
-						baseline=1
-						break
-					endif
-				endif
-				batteryindex+=1
-				setdatafolder root:
-				setdatafolder $typename
-			while(1)
-	endif
-					
-	setdatafolder root:
-	if (baseline==1)
-		break
-	endif
-	typeindex+=1
-while(1)
-endif
-if (paramisdefault(chartname))
-	chartname = "Avg"+possiblyquotename(ywaven)+"vs"+possiblyquotename(xwaven)
-endif
-dowindow $chartname
-if (paramisdefault(oktoadd))
-	oktoadd = 0
-endif
-if (v_flag==0)
-	display /N=$chartname
-elseif ((v_flag==1) && (oktoadd==0))
-	do
-		string cndpstring=chartname+" already exists as a chart name"
-		string newchartname
-		prompt newchartname,"Enter new name for chart or type \"add\" to add waves to existing."
-		doprompt cndpstring, newchartname
-		if (cmpstr(newchartname,"add")==0)
-			break
-		endif
-		chartname = newchartname
-		dowindow $newchartname
-	while (v_flag!=0)
-	if (cmpstr(newChartname,"add")!=0)
-		display /N=$chartname
-	endif
-endif
-
-if (paramisdefault(semplot))
-	semplot=2
-endif
-
-setdatafolder root:
-typeindex=0
-do
-	typename= GetIndexedObjName(":",4,typeindex)
-	if (strlen(typename)==0)
-		break
-	endif
-	setdatafolder $typename
-	variable /G batterycount=0
-	nvar /Z skip
-	if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
-			batteryindex=0
-			do
-				batteryname=GetIndexedObjName(":",4,batteryindex)
-				if (strlen(batteryname)==0)
-					break
-				endif
-				setdatafolder $batteryname
-				nvar /Z skip
-				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
-					batterycount+=1
-					string yavgn,ysemn,xtypen
-					wave ywave = $ywaven
-					wave xwave = $xwaven
-					yavgn 	= "root:"+typename+":"+ywaven+"avg"
-					ysemn 	= "root:"+typename+":"+ywaven+"sem"
-					xtypen 	= "root:"+typename+":"+xwaven+"baseline"
-					wave /Z yavg=$yavgn, ysem=$ysemn, xtype=$xtypen
-					if (!waveexists(yavg))
-						duplicate ywave $yavgn
-						wave yavg = $yavgn
-						yavg = NaN
-					endif
-					if (!waveexists(ysem))
-						duplicate ywave  $ysemn
-						wave ysem = $ysemn
-						ysem = NaN
-					endif
-					if (!waveexists(xtype))
-						duplicate xwave $xtypen
-						wave xtype = $xtypen
-					endif
-				endif
-				batteryindex+=1
-				setdatafolder root:
-				setdatafolder $typename
-			while(1)
-	endif
-	setdatafolder root:
-	waveclear xwave,ywave
-	waveclear yavg,ysem,xtype
-	typeindex+=1
-while(1)
-setdatafolder root:
-typeindex=0
-do
-	typename= GetIndexedObjName(":",4,typeindex)
-	if (strlen(typename)==0)
-		break
-	endif
-	setdatafolder $typename
-	yavgn = ywaven+"avg"
-	ysemn = ywaven+"sem"
-	xtypen = xwaven+"baseline"
-	wave yavg = $yavgn
-	wave ysem = $ysemn
-	wave xtype = $xtypen
-	
-	nvar /Z skip
-	if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
-		nvar batterycount
-
-
-		variable xindex=0
-		do
-			variable batterycounter=0
-			batteryindex=0
-			make /N=(batterycount) /o yvalues
-			yvalues = NaN
-			do
-
-				batteryname=GetIndexedObjName(":",4,batteryindex)
-				if (strlen(batteryname)==0)
-					break
-				endif
-				setdatafolder $batteryname
-				nvar /Z skip
-				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
-					wave ywave = $ywaven
-					wave xwave = $xwaven
-					variable xxindex=0
-					do
-						if (xwave[xxindex]==xtype[xindex]) 
-							yvalues[batterycounter] = ywave[xxindex]
-							break
-						endif
-						if (xxindex<(numpnts(xwave)-1))
-							if ((xwave[xxindex]<=xtype[xindex]) && (xwave[xxindex+1]>=xtype[xindex]) )
-								yvalues[batterycounter] = (ywave[xxindex+1]-ywave[xxindex])*(xtype[xindex]-xwave[xxindex])
-								yvalues[batterycounter] /= (xwave[xxindex+1]-xwave[xxindex])
-								yvalues[batterycounter] += ywave[xxindex]
-								break
-							endif
-						endif
-						xxindex+=1
-					while (xxindex<numpnts(xwave))
-						batterycounter+=1
-				endif
-				batteryindex+=1
-				setdatafolder root:
-				setdatafolder $typename
-			while(1)
-		wavestats /q yvalues
-		yavg[xindex] = v_avg
-		ysem[xindex] = v_sem
-		killwaves yvalues
-		xindex+=1
-		while(xindex<numpnts(xtype))
-		if (semplot==2) 
-			string yplusN = ywaven + "avgplusSEM"
-			string yminusN = ywaven + "avgminusSEM"
-			duplicate /o yavg $yplusN
-			wave yplus = $yplusN
-			yplus += ysem
-			duplicate /o yavg $yminusN
-			wave yminus= $yminusN
-			yminus -= ysem
-			yplusN =typename+yplusN
-			yminusN = typename+yminusN
-			appendtograph /W=$chartname /L=$ywaven yplus /TN=$yplusN vs xtype
-			appendtograph /W=$chartname /L=$ywaven yminus /TN=$yminusN vs xtype
-			ModifyGraph /W=$chartname mode($yplusN)=7,lsize($yplusN)=0,lsize($yminusN)=0,hbFill($yplusN)=5
-			ModifyGraph /W=$chartname toMode($yplusN)=1
-		endif 
-	endif
-	setdatafolder root:
-	waveclear yavg,ysem,xtype
-	typeindex+=1
-while(1)
-
-setdatafolder root:
-typeindex=0
-do
-	typename= GetIndexedObjName(":",4,typeindex)
-	print typename
-	if (strlen(typename)==0)
-		break
-	endif
-	setdatafolder $typename
-	nvar red,green,blue
-	yavgn = ywaven+"avg"
-	ysemn = ywaven+"sem"
-	xtypen = xwaven+"baseline"
-	wave yavg = $yavgn
-	wave ysem = $ysemn
-	wave xtype = $xtypen
-	yavgN = typename + yavgn
-	yplusN = typename + ywaven + "avgplusSEM"
-	yminusN = typename + ywaven + "avgminusSEM"
-	appendtograph /W=$chartname /L=$ywaven yavg /TN=$yavgN vs xtype
-	modifygraph /W=$chartname rgb($yavgN)=(red,green,blue)
-	if (strlen(legendtext)>0)
-		legendtext += "\r"
-	endif
-	legendtext+="\s("+yavgN+")"+ typename
-
-	if (semplot==2)
-		modifygraph /W=$chartname rgb($yplusN)=(red,green,blue)
-		modifygraph /W=$chartname rgb($yminusN)=(red,green,blue)
-		killwaves $ysemn
-	else
-		ErrorBars /W=$chartname $yavgN Y,wave=($ysemn, $ysemn)
-	endif
-	killvariables batterycount
-	setdatafolder root:
-	waveclear yavg,ysem,xtype
-	typeindex+=1
-while(1)
-if (v_flag==0)
-	Textbox /W=$chartname /N=legendary legendtext
-endif
-modifygraph /W=$chartname axisontop=1, axoffset=0, font="Arial",freepos=0,standoff=0
-ModifyGraph lblPosMode=1,lblMargin=5
-string axl=AxisList(chartname)
-variable axi=0
-variable axcount=0
-do
-	string axn=StringFromList(axi, axl)
-	if (strlen(axn)==0)
-		break
-	endif
-	string axinf=axisinfo(chartname,axn)
-	if ((strsearch(axn, "bottom", 0)<0) && (strsearch(axn,"top",0)<0) )
-		axcount+=1
-	endif
-	axi+=1
-while(1)
-
-if (axcount>1)
-	axi=0
-	variable axcounter=0
-	do
-		axn=StringFromList(axi, axl)
-		if (strlen(axn)==0)
-			break
-		endif
-		axinf=axisinfo(chartname,axn)
-		if ((strsearch(axn, "bottom", 0)<0) && (strsearch(axn,"top",0)<0) )
-			variable gap=0.03
-			variable seg=(1-axcount*gap)/axcount
-			variable lowfrac = axcounter*(seg+gap)
-			variable hifrac = axcounter*(seg+gap)+seg
-			if (hifrac>0.95)
-				hifrac=1
-			endif
-			modifygraph /W=$chartname axisenab($axn)={lowfrac,hifrac}
-			axcounter+=1
-		endif
-		axi+=1
-	while(1)
-endif
-end
 
 function AverageandSEMbytypeVariable([varname,chartname,oktoadd])
 string varname, chartname
@@ -423,12 +117,10 @@ do
 while(1)
 endif
 if (paramisdefault(chartname))
-	chartname = "Avg"+possiblyquotename(varname)+"vstype"
+	chartname = "Avg"+cleanupname(varname,0)+"vstype"
 endif
 dowindow $chartname
-//if (v_flag==0)
-//	display /N=$chartname
-//else
+
 if (paramisdefault(oktoadd))
 	oktoadd = 0
 endif
@@ -443,7 +135,10 @@ elseif ((v_flag==1) && (oktoadd==0))
 		if (cmpstr(newchartname,"add")==0)
 			break
 		endif
-		chartname = newchartname
+		chartname = cleanupname(newchartname,0)
+		if (checkname(chartname,6)!=0)
+			chartname=uniquename(chartname,6,1)
+		endif
 		dowindow $newchartname
 	while (v_flag!=0)
 	if (cmpstr(newChartname,"add")!=0)
@@ -1084,7 +779,7 @@ strswitch(multicycle) //Deciding between single and multi cycle data
 		print intersectname + " (New wave is named " + charttitle + ")"
 		strswitch(graphtype)
 			case "Line (Avg/SEM)":
-			AverageandSEMbyTypeWave(ywaven=charttitle, xwaven="index", chartname=charttitle,SEMplot=2)
+			avgsemvswave(ywaven=charttitle, xwaven="index", chartname=charttitle,SEMplot=2)
 			Textbox /C/W=$charttitle /N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo(charttitle,"legendary",1))))
 			break
 			case "Line (All Batteries)":
@@ -1264,7 +959,7 @@ case "No":
 	GraphItAll(ywaven=ywavenew,xwaven=xwavenew,chartname=chartname)
 break
 default:
-	AverageandSEMbyTypeWave(ywaven=ywavenew,xwaven=xwavenew,chartname=chartname,SEMplot=2)
+	avgsemvswave(ywaven=ywavenew,xwaven=xwavenew,chartname=chartname,SEMplot=2)
 	ExecuteAllBatteries("killwaves "+ywavenew+", "+xwavenew)
 	Textbox /C/W=$chartname /N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo(chartname,"legendary",1))))
 break
@@ -1539,9 +1234,10 @@ do
 					wave  ywave = $ywaven
 					string bname = typename+batteryname
 					string yN = ywaven+typename+batteryname
-					yN=replacestring("Bat",yN,"_")
-					yN=replacestring(" ",yN,"_")
-					yN=yN[(strlen(yN)-30),(strlen(yN))] 
+					yN = cleanupname(yN,0)
+					//if (checkname(yN, )!=0)
+					//	yN = uniquename(yN,2)
+					//endif
 					appendtograph /W=$chartname /L=$ywaven ywave /TN=$yN vs xwave
 					modifygraph /W=$chartname rgb($yN) = (red,green,blue)
 					modifygraph /W=$chartname lstyle($yN)= batteryindex
@@ -1766,9 +1462,9 @@ variable tim=startmstimer
 setdatafolder root:
 svar vwavename,curwavename,totaltimename
 string tempname = "Temperature_A1"
-AverageandSEMbytypeWave(ywaven=vwavename,xwaven=totaltimename,chartname="TempStat",semplot=2)
-AverageandSEMbytypewave(ywaven=curwavename, xwaven=totaltimename,chartname="TempStat",semplot=2)
-AverageandSEMbytypewave(ywaven=tempname,xwaven=totaltimename,chartname="TempStat",semplot=2)
+avgsemvswave(ywaven=vwavename,xwaven=totaltimename,chartname="TempStat",semplot=2)
+avgsemvswave(ywaven=curwavename, xwaven=totaltimename,chartname="TempStat",semplot=2)
+avgsemvswave(ywaven=tempname,xwaven=totaltimename,chartname="TempStat",semplot=2)
 Label /W=TempStat $vwavename "Voltage(V)"
 Label /W=TempStat $curwavename "Current(A)"
 Label /W=TempStat $tempname "Temperature (°C)"
@@ -1784,8 +1480,8 @@ function CreateBaselineRunChartSEM() //takes much longer, but gives sem
 variable tim=startmstimer
 setdatafolder root:
 svar vwavename,curwavename,totaltimename,timelabel
-AverageandSEMbytypeWave(ywaven=vwavename,xwaven=totaltimename,chartname="baselinerunchartSEM",semplot=2)
-AverageandSEMbytypewave(ywaven=curwavename, xwaven=totaltimename,chartname="baselinerunchartSEM",semplot=2)
+avgsemvswave(ywaven=vwavename,xwaven=totaltimename,chartname="baselinerunchartSEM",semplot=2)
+avgsemvswave(ywaven=curwavename, xwaven=totaltimename,chartname="baselinerunchartSEM",semplot=2)
 Label /W=baselinerunchartSEM $vwavename "Voltage(V)"
 Label /W=baselinerunchartSEM $curwavename "Current(A)"
 ModifyGraph axisEnab($vwavename)={0,0.48},axisEnab($curwavename)={0.52,1}

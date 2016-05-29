@@ -304,7 +304,7 @@ strswitch(task)
 	GraphItAll()
 	break
 	case "AverageandSEMbyTypeWave":
-	AverageandSEMbyTypeWave()
+	avgsemvswave()
 	break
 	case "Intersect":
 	Intersect()
@@ -356,8 +356,8 @@ strswitch(task)
 		graphitall(ywaven=curwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend)
 		break
 		case "Yes":
-		AverageandSEMbytypeWave(ywaven=vwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend,semplot=2,oktoadd=1)
-		AverageandSEMbytypeWave(ywaven=curwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend,semplot=2,oktoadd=1)
+		avgsemvswave(ywaven=vwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend,semplot=2)
+		avgsemvswave(ywaven=curwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend,semplot=2)
 		Textbox /C/W=$("baselinerunchart"+newappend) /N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo("baselinerunchart"+newappend,"legendary",1))))
 		modifygraph minor=1
 		break
