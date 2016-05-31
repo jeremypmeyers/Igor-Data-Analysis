@@ -77,7 +77,7 @@ string waven //wave name of HHH:MMM:SSS textwave
 if (paramisdefault(waven))
 string startfolder=getdatafolder(1)
 	setdatafolder root:
-	firstpopulatedfolder(setf=1)
+	gotofirstpopulatedfolder()	
 	string wl = wavelist("*time*",";","")
 	wl += wavelist("*",";","")
 	prompt waven, "Enter time wave to convert to numerical",popup, wl
@@ -137,7 +137,7 @@ end
 
 function /S gettimelabel()
 //Goes to the first populated folder and returns the first timeunit
-firstpopulatedfolder(setf=1)
+gotofirstpopulatedfolder()
 svar timeunit
 string tu=timeunit
 setdatafolder root:
@@ -232,7 +232,7 @@ function fixtime()
 setdatafolder root:
 svar totaltimename
 string tsn
-firstpopulatedfolder(setf=1)
+gotofirstpopulatedfolder()
 string tsmenustr=wavelist("*Time*",";","")+wavelist("*",";","")
 setdatafolder root:
 prompt tsn, "Enter name of wave with date/time stamp information", popup, tsmenustr

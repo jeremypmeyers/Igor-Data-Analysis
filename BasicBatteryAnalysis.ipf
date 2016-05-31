@@ -8,8 +8,7 @@ Function BasicBatteryAnalysis()
 	endif
 	nvar/z chstep,dischstep,laststep
 	if ((!nvar_exists(chstep)) || (!nvar_exists(dischstep)) || (!nvar_exists(laststep)))
-		string topfolder=firstpopulatedfolder()
-		setdatafolder $topfolder //aka nothing will work in the experiment if  the top folder is bad/unusual
+		gotofirstpopulatedfolder()
 		wave stepwave=$stepname
 		wavestats/q/m=1 $capname//figure out the likely charge/discharge steps
 		variable/g root:chstep=stepwave[v_maxloc]

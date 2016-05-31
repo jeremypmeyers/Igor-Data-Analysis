@@ -23,8 +23,9 @@ do
 while(1)
 end
 
-function ExecuteAllBatteries(commandstring)
+function ExecuteAllBatteries(commandstring,[whichload])
 string commandstring
+variable whichload
 if (strlen(commandstring)==0)
 	prompt commandstring, "What command do you want to execute for each type?"
 	doprompt "Command sought",commandstring
@@ -48,7 +49,10 @@ do
 				setdatafolder $batteryname
 				nvar /Z skip
 				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
+				nvar loadorder 
+				if ( (!paramisdefault(whichload)) && (whichload== loadorder) )
 						execute commandstring // here's where we execute whatever we want to be done for each type
+				endif
 				endif
 				batteryindex+=1
 				setdatafolder root:
@@ -539,8 +543,8 @@ if (axcount>1)
 endif
 end
 
-function/S firstpopulatedfolder([setf])
-variable setf
+function/S gotofirstpopulatedfolder([whichload])
+variable whichload
 setdatafolder root:
 string folder=""
 variable foundfolderwithwaves=0
@@ -577,9 +581,7 @@ do
 		setdatafolder root:
 		typeindex+=1
 	while(1)
-if (setf==1)
 	setdatafolder $folder
-endif
 return folder
 end
 

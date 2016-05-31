@@ -379,7 +379,6 @@ string loadtype
 		foldername = ReplaceString(" ", foldername, "")
 		foldername = ReplaceString("-", foldername,"")
 		foldername = ReplaceString("_",foldername,"")
-		foldername = ReplaceString("Batt",foldername,"Bat")	
 
 		setdatafolder root:
 		string foldernameprompt="Enter battery name for data imported from file "+filename

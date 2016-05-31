@@ -25,14 +25,14 @@ menu "Battery Analysis"
 	Submenu "Utilities"
 		"Execute command on elements in all type folders", ExecuteAllTypes("")
 		"Execute command on elements in all data subfolders", ExecuteAllBatteries("")
-		"Plot average + SEM vs continuous x-value, line plot", AverageandSEMbyTypeWave()
+		"Plot average + SEM vs continuous x-value, line plot", avgsemvswave()
 		"Plot average + SEM vs ordinal x-value, bar plot", AverageSEMbyTypeCategory()
 		"Plot average + SEM single value vs battery type, bar plot", AverageandSEMbyTypeVariable()
 		"Simple line plot for all batteries", GraphItAll()
 		"Calculate Recharge Factor", calculaterechargefactor()
 		"Plot average + SEM of condition at specified value", Intersect()
 		"Plot isolated subsets of data: cycle, step, etc.",Isolate()
-		"Return location of first populated battery folder", FirstPopulatedFolder([setf=1])
+		"Go to first populated battery folder", gotofirstpopulatedfolder()
 	end
 	Submenu "Frequently used charts"
 		"Create Baseline Run Chart", createbaselinerunchart();Textbox /C/N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo("baselinerunchart","legendary",1))));modifygraph minor=1
@@ -945,8 +945,10 @@ do
 					wave  Current
 					wave RunTime
 
-					string vname = cleanupname("V"+typename+batteryname,0)
-					string aname = cleanupname("A"+typename+batteryname,0)
+					string vname = maketracename("V",typename,batteryname,"baselinerunchart")
+					string aname = maketracename("A",typename,batteryname,"baselinerunchart")
+					
+					
 					appendtograph /W=baselinerunchart /L=V voltage /TN=$vname vs RunTime
 					appendtograph /W=baselinerunchart /L=A current /TN=$aname vs RunTime
 					modifygraph /W=baselinerunchart rgb($vname) = (red,green,blue)
@@ -976,7 +978,7 @@ modifygraph /W=baselinerunchart axisenab(A)={0.52,1}
 label /W=baselinerunchart V "Voltage(V)"
 label /W=baselinerunchart A "Current(A)"
 setdatafolder root:
-firstpopulatedfolder(setf=1)
+gotofirstpopulatedfolder()
 svar timeunit
 string timelabel = "Time("+lowerstr(timeunit)+")"
 setdatafolder root:

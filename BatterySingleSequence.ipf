@@ -295,7 +295,7 @@ function CreateSingleStepSelectionChart(stepsign)
 variable stepsign
 setdatafolder root:
 svar /Z vwavename,curwavename,capname,discapname,cyclename,stepname,steptimename,totaltimename,timelabel
-firstpopulatedfolder(setf=1)
+gotofirstpopulatedfolder()
 
 	wave step=$stepname
 	make /N=25 /o stepnumbers
