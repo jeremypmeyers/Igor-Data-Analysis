@@ -1235,9 +1235,9 @@ do
 					string bname = typename+batteryname
 					string yN = ywaven+typename+batteryname
 					yN = cleanupname(yN,0)
-					//if (checkname(yN, )!=0)
-					//	yN = uniquename(yN,2)
-					//endif
+					if (checkname(yN, 15)!=0)
+						yN = uniquename(yN,15,2)
+					endif
 					appendtograph /W=$chartname /L=$ywaven ywave /TN=$yN vs xwave
 					modifygraph /W=$chartname rgb($yN) = (red,green,blue)
 					modifygraph /W=$chartname lstyle($yN)= batteryindex

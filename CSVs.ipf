@@ -2,86 +2,81 @@
 
 Function LoadallCSVs([loadtype])
 string loadtype
-	String pathName			// Name of symbolic path or "" to get dialog
-	String startfolder=getdatafolder(1)
-	String fileName
-	String graphName
-	Variable index=0
+String pathName			// Name of symbolic path or "" to get dialog
+String startfolder=getdatafolder(1)
+String fileName
+String graphName
+Variable index=0
 
+variable nameLine,firstLine,numLines,firstColumn,numColumns
+nameline = 0
+firstline = 0
+numlines= 0
+firstcolumn = 0
+numcolumns = 0
+if (paramisdefault(loadtype))
+	prompt nameline, "What line are column names on?"
+	prompt firstline, "What line is the first line of data?"
+	prompt numlines, "How many lines?"
+	prompt firstcolumn, "What is the first column of data?"
+	prompt numcolumns, "How many columns?"
+	doprompt "Input info",nameline,firstline,numlines, firstcolumn,numcolumns
+endif
 
-	variable nameLine,firstLine,numLines,firstColumn,numColumns
-	nameline = 0
-	firstline = 0
-	numlines= 0
-	firstcolumn = 0
-	numcolumns = 0
-	if (paramisdefault(loadtype))
-		prompt nameline, "What line are column names on?"
-		prompt firstline, "What line is the first line of data?"
-		prompt numlines, "How many lines?"
-		prompt firstcolumn, "What is the first column of data?"
-		prompt numcolumns, "How many columns?"
-		doprompt "Input info",nameline,firstline,numlines, firstcolumn,numcolumns
+NewPath/O temporaryPath	// This will put up a dialog to select a folder to load from.
+if (V_flag != 0)
+	Print "Cancelled opening file"
+	Abort
+endif
+pathName = "temporaryPath"
+pathinfo temporaryPath
+notebook recording text="Source folder is "+S_path+"\r"
+Variable result
+do			// Loop through each file in folder
+	fileName = IndexedFile(temporarypath, index,".csv")
+	if (strlen(fileName) == 0)			// No more files?
+		break									// Break out of loop
 	endif
+string foldername=filename
+foldername = ReplaceString(".csv",foldername,"")
+foldername = ReplaceString(" ", foldername, "")
+foldername = ReplaceString("-", foldername,"")
+foldername = ReplaceString("%",foldername,"pc")
+foldername = ReplaceString(".",foldername,"_")
+foldername = ReplaceString("txt",foldername,"")
 
-
-
-	NewPath/O temporaryPath			// This will put up a dialog
-	if (V_flag != 0)
-		Print "Cancelled opening file"
-		Abort
-	endif
-	pathName = "temporaryPath"
-	pathinfo temporaryPath
-	notebook recording text="Source folder is "+S_path+"\r"
-	Variable result
-	do			// Loop through each file in folder
-		fileName = IndexedFile(temporarypath, index,".csv")
-		
-		if (strlen(fileName) == 0)			// No more files?
-			break									// Break out of loop
-		endif
-		string foldername=filename
-		foldername = ReplaceString(".csv",foldername,"")
-		foldername = ReplaceString(" ", foldername, "")
-		foldername = ReplaceString("-", foldername,"")
-		foldername = ReplaceString("%",foldername,"pc")
-		foldername = ReplaceString(".",foldername,"_")
-		foldername = ReplaceString("txt",foldername,"")
-
-	setdatafolder root:
-	string foldernameprompt="Enter battery name for data imported from file "+filename
-	prompt foldername,foldernameprompt
-	string battypeprompt="Enter variable type for data from "+filename
-	string menulist=""
-	string objName
-	variable findex=0
-	objName = GetIndexedObjName(":", 4, findex)
-	if (strlen(objName) == 0)
+setdatafolder root:
+string foldernameprompt="Enter battery name for data imported from file "+filename
+prompt foldername,foldernameprompt
+string battypeprompt="Enter variable type for data from "+filename
+string menulist=""
+string objName
+variable findex=0
+objName = GetIndexedObjName(":", 4, findex)
+if (strlen(objName) == 0)
 		break
-	endif
-	if (findex>0)
-		menulist+=";"
-	endif
-	menulist+= objName
-	findex += 1
+endif
+if (findex>0)
+	menulist+=";"
+endif
+menulist+= objName
+findex += 1
 
-	menulist+=";Skip this file"
-	string currentbattype=GetIndexedObjName(":",4,0)
-	prompt currentbattype,battypeprompt,popup,menulist
-	string promptstring="Info for data from "+filename
-	variable foldernamecheck
-	foldernamecheck=0
-		doprompt promptstring,currentbattype,foldername
-		if (cmpstr(currentbattype,"Skip this file")!=0)
-			foldername = cleanupname(foldername,1)
-			if (checkname(foldername,11)!=0)
-				foldername = uniquename(foldername,11,1)
-			endif
-		endif
+menulist+=";Skip this file"
+string currentbattype=GetIndexedObjName(":",4,0)
+prompt currentbattype,battypeprompt,popup,menulist
+string promptstring="Info for data from "+filename
+variable foldernamecheck
+foldernamecheck=0
+doprompt promptstring,currentbattype,foldername
+if (cmpstr(currentbattype,"Skip this file")!=0)
+	foldername = cleanupname(foldername,1)
+	if (checkname(foldername,11)!=0)
+		foldername = uniquename(foldername,11,2)
+	endif
+endif
 		
-	if (cmpstr(currentbattype,"Skip this file")!=0)
-	
+if (cmpstr(currentbattype,"Skip this file")!=0)	
 	setdatafolder $currentbattype
 	nvar red, green, blue
 	variable r=red
