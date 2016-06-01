@@ -35,7 +35,7 @@ menu "Battery Analysis"
 		"Go to first populated battery folder", gotofirstpopulatedfolder()
 	end
 	Submenu "Frequently used charts"
-		"Create Baseline Run Chart", createbaselinerunchart();Textbox /C/N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo("baselinerunchart","legendary",1))));modifygraph minor=1
+		"Create Baseline Run Chart", createbaselinerunchart()
 		"Baseline Run Chart with SEM", CreateBaselineRunChartSEM()
 		"Run Chart with Temperature", Tempstats()
 	end
@@ -152,7 +152,7 @@ variable done=0
 	endif
 	while (done<1)
 	SaveExperiment
-	batanalysis()
+	PbAnalysis()
 
 end
 

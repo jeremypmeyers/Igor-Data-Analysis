@@ -50,7 +50,7 @@ do
 				nvar /Z skip
 				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
 				nvar loadorder 
-				if ( (!paramisdefault(whichload)) && (whichload== loadorder) )
+				if ( (paramisdefault(whichload)) || ((!paramisdefault(whichload)) && (whichload== loadorder) ) )
 						execute commandstring // here's where we execute whatever we want to be done for each type
 				endif
 				endif
@@ -209,7 +209,7 @@ do
 	setdatafolder root:
 	typeindex+=1
 while(1)
-modifygraph /W=$chartname axisontop=1, axoffset=0, font="Corbel",freepos=0,standoff=0
+modifygraph /W=$chartname axisontop=1, axoffset=0, font="Arial",freepos=0,standoff=0
 ModifyGraph /W=$chartname lblPosMode=1,lblMargin=5
 //ModifyGraph /W=$chartname fSize=16
 SetAxis /A/N=1/E=1 /W=$chartname $varname
@@ -489,7 +489,7 @@ do
 	endif
 	legendtext+="\s("+yavgN+")"+ typename
 	
-	modifygraph /W=$chartname axisontop=1, axoffset=0, font="Corbel",freepos=0,standoff=0
+	modifygraph /W=$chartname axisontop=1, axoffset=0, font="Arial",freepos=0,standoff=0
 	ModifyGraph /W=$chartname lblPosMode=1,lblMargin=5
 	ModifyGraph /W=$chartname fSize=16
 	//SetAxis /A/N=1/E=1 /W=$chartname $varname
@@ -504,7 +504,7 @@ while(1)
 if (v_flag==0)
 	Textbox /W=$chartname /N=legendary legendtext
 endif
-modifygraph /W=$chartname axisontop=1, axoffset=0, font="Corbel",freepos=0,standoff=0
+modifygraph /W=$chartname axisontop=1, axoffset=0, font="Arial",freepos=0,standoff=0
 ModifyGraph lblPosMode=1,lblMargin=5
 string axl=AxisList(chartname)
 variable axi=0
@@ -726,7 +726,6 @@ strswitch(multicycle) //Deciding between single and multi cycle data
 		print intersectname+" (New wave is named "+charttitle+")"
 		ExecuteAllBatteries(cmd)
 		AverageandSEMbyTypeVariable(varname=charttitle, chartname=charttitle)
-		execute "types=makereadablenames(types)"
 		DoWindow/C/T $charttitle,intersectname
 		Label $charttitle charttitle
 		ModifyGraph axOffset(bottom)=-1
@@ -782,14 +781,12 @@ strswitch(multicycle) //Deciding between single and multi cycle data
 		strswitch(graphtype)
 			case "Line (Avg/SEM)":
 			avgsemvswave(ywaven=charttitle, xwaven="index", chartname=charttitle,SEMplot=2)
-			Textbox /C/W=$charttitle /N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo(charttitle,"legendary",1))))
 			break
 			case "Line (All Batteries)":
 			GraphItAll(ywaven=charttitle, xwaven="index", chartname=charttitle)
 			break
 			default:
 			AverageSEMbyTypeCategory(ywaven=charttitle, xwaven="cyclenumberText", chartname=charttitle,oktoadd=1)
-			Textbox /C/W=$charttitle /N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo(charttitle,"legendary",1))))
 			ModifyGraph axOffset(bottom)=-1
 			break
 		endswitch
@@ -963,7 +960,6 @@ break
 default:
 	avgsemvswave(ywaven=ywavenew,xwaven=xwavenew,chartname=chartname,SEMplot=2)
 	ExecuteAllBatteries("killwaves "+ywavenew+", "+xwavenew)
-	Textbox /C/W=$chartname /N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo(chartname,"legendary",1))))
 break
 endswitch
 Label $ywavenew ywaven
@@ -1258,12 +1254,11 @@ do
 	typeindex+=1
 while(1)
 
-legendtext=MakeReadableNames(legendtext)
 if (v_flag==0)
 	Textbox /C/W=$chartname /N=legendary legendtext
 endif
 ModifyGraph /W=$chartname lblPosMode=1,lblMargin=5
-modifygraph /W=$chartname axisontop=1, axoffset=0, font="Corbel",freepos=0,standoff=0
+modifygraph /W=$chartname axisontop=1, axoffset=0, font="Arial",freepos=0,standoff=0
 
 Label $ywaven ywaven
 Label bottom xwaven
@@ -1452,7 +1447,6 @@ label /W=tempstat T "Temperature(°C)"
 setdatafolder root:
 string /G timelabel = "Time("+unitstrings[desiredtimeunits-1]+")"
 label /W=tempstat bottom timelabel
-legendstring=MakeReadableNames(legendstring)
 Textbox /W=tempstat /N=legendary legendstring
 ModifyGraph /W=tempstat lblPosMode=1
 modifygraph minor=1
@@ -1473,7 +1467,6 @@ Label /W=TempStat $tempname "Temperature (°C)"
 modifygraph minor=1
 svar timelabel
 Label /W=TempStat bottom timelabel
-Textbox /C/W=TempStat /N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo("TempStat","legendary",1))))
 variable timend=stopmstimer(tim)
 print timend/100000, " microseconds"
 end
@@ -1489,7 +1482,6 @@ Label /W=baselinerunchartSEM $curwavename "Current(A)"
 ModifyGraph axisEnab($vwavename)={0,0.48},axisEnab($curwavename)={0.52,1}
 modifygraph minor=1
 Label /W=baselinerunchartSEM bottom timelabel
-Textbox /C/W=baselinerunchartSEM /N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo("baselinerunchartSEM","legendary",1))))
 variable timend=stopmstimer(tim)
 print timend/1000000, "seconds"
 end
@@ -1538,7 +1530,6 @@ Print mode+" colors"
 end
 
 function ChangePatterns() //Adds appropriate stripes to bar graphs for PBL3
-execute "types=makereadablenames(types)"
 string axname=replacestring(";bottom;",axislist(""),"")
 ModifyGraph rgb($axname+"avg"[0])=(65278,0,0)
 ModifyGraph/Z rgb($axname+"avg"[1])=(3,52428,1)

@@ -319,8 +319,7 @@ strswitch(task)
 	break
 	//Other
 	case "baselinerunchart":
-	createbaselinerunchart();Textbox /C/N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo("baselinerunchart","legendary",1))));modifygraph minor=1
-	break
+	createbaselinerunchart()
 	case "BRCSEM":
 	CreateBaselineRunChartSEM()
 	break
@@ -357,7 +356,6 @@ strswitch(task)
 		case "Yes":
 		avgsemvswave(ywaven=vwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend,semplot=2)
 		avgsemvswave(ywaven=curwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend,semplot=2)
-		Textbox /C/W=$("baselinerunchart"+newappend) /N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo("baselinerunchart"+newappend,"legendary",1))))
 		modifygraph minor=1
 		break
 	endswitch
