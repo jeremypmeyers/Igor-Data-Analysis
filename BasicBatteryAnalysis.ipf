@@ -8,8 +8,7 @@ Function BasicBatteryAnalysis()
 	endif
 	nvar/z chstep,dischstep,laststep
 	if ((!nvar_exists(chstep)) || (!nvar_exists(dischstep)) || (!nvar_exists(laststep)))
-		string topfolder=firstpopulatedfolder()
-		setdatafolder $topfolder //aka nothing will work in the experiment if  the top folder is bad/unusual
+		gotofirstpopulatedfolder()
 		wave stepwave=$stepname
 		wavestats/q/m=1 $capname//figure out the likely charge/discharge steps
 		variable/g root:chstep=stepwave[v_maxloc]
@@ -320,8 +319,7 @@ strswitch(task)
 	break
 	//Other
 	case "baselinerunchart":
-	createbaselinerunchart();Textbox /C/N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo("baselinerunchart","legendary",1))));modifygraph minor=1
-	break
+	createbaselinerunchart()
 	case "BRCSEM":
 	CreateBaselineRunChartSEM()
 	break
@@ -358,7 +356,6 @@ strswitch(task)
 		case "Yes":
 		avgsemvswave(ywaven=vwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend,semplot=2)
 		avgsemvswave(ywaven=curwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend,semplot=2)
-		Textbox /C/W=$("baselinerunchart"+newappend) /N=legendary makereadablenames(stringbykey("TEXT",(annotationinfo("baselinerunchart"+newappend,"legendary",1))))
 		modifygraph minor=1
 		break
 	endswitch

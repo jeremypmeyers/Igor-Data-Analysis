@@ -1,32 +1,5 @@
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 
-
-function boostcharge()
-setdatafolder root:
-string comparechart = "baselinerunchart"
-excludeBadData(comparechart)
-svar vwavename,curwavename,capname,totaltimename
-avgsemvswave(ywaven="Voltage",xwaven="RunTime",chartname="BoostByType")
-avgsemvswave(ywaven="Current", xwaven="RunTime",chartname="BoostByType")
-avgsemvswave(ywaven="Capacity",xwaven="RunTime",chartname="BoostByType")
-Label /W=BoostByType VoltageAvg "Voltage(V)"
-Label /W=BoostByType CurrentAvg "Current(A)"
-Label /W=BoostByType CapacityAvg "Capacity (Ah)"
-cleanaxes("BoostByType")
-string runtimelabel = gettimelabel()
-Label /W=BoostByType bottom "Time ("+lowerstr(runtimelabel)+")"
-notebook recording text="Standard boost chart\r"
-doupdate /W=BoostByType
-notebook recording picture={BoostByType,0,1}
-notebook recording text="Boost capacity comparison\r"
-ExecuteAllBatteries("wavestats /Q capacity; variable /G boostfullcharge=v_max")
-AverageandSEMbytypeVariable(varname="boostfullcharge",chartname="boostcapacitychart")
-Label /W=BoostCapacityChart boostfullcharge "Boost Charge (Ah)"
-doupdate /W=BoostCapacityChart
-notebook recording picture={BoostCapacityChart,0,1}
-notebook recording text="\r"
-end
-
 function capacitymeasurement()
 setdatafolder root:
 string comparechart="baselinerunchart"
@@ -295,7 +268,7 @@ function CreateSingleStepSelectionChart(stepsign)
 variable stepsign
 setdatafolder root:
 svar /Z vwavename,curwavename,capname,discapname,cyclename,stepname,steptimename,totaltimename,timelabel
-firstpopulatedfolder(setf=1)
+gotofirstpopulatedfolder()
 
 	wave step=$stepname
 	make /N=25 /o stepnumbers

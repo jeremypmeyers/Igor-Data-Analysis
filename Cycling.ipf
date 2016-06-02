@@ -87,8 +87,8 @@ end
 function CreateCycleChart()
 setdatafolder root:
 svar /Z vwavename,curwavename,capname,discapname,cyclename,stepname,steptimename,totaltimename,timelabel
-string folder=firstpopulatedfolder()
-setdatafolder $folder
+gotofirstpopulatedfolder()
+
 
 if (svar_exists(stepname))
 	wave step=$stepname
@@ -186,8 +186,8 @@ end
 function CreateStepSelectionChart()
 setdatafolder root:
 svar /Z vwavename,curwavename,capname,discapname,cyclename,stepname,steptimename,totaltimename,timelabel
-string folder=firstpopulatedfolder()
-setdatafolder $folder
+gotofirstpopulatedfolder()
+
 
 	wave step=$stepname
 	make /N=25 /o stepnumbers
@@ -246,8 +246,8 @@ function dischargecapacitysign(dischargesteps)
 wave dischargesteps
 setdatafolder root:
 svar /Z capname,discapname,stepname,cyclename
-string fold =firstpopulatedfolder()
-setdatafolder $fold
+gotofirstpopulatedfolder()
+
 if (svar_exists(discapname))
 	wave cap=$discapname
 else
@@ -282,8 +282,7 @@ variable dcapsign
 variable dcapcontinuous
 setdatafolder root:
 svar /Z capname,discapname,stepname,cyclename
-string fold =firstpopulatedfolder()
-setdatafolder $fold
+gotofirstpopulatedfolder()
 if (svar_exists(discapname))
 	wave cap=$discapname
 else
@@ -308,8 +307,7 @@ wave chargesteps
 variable ccapcontinuous
 setdatafolder root:
 svar /Z capname,stepname,cyclename
-string fold =firstpopulatedfolder()
-setdatafolder $fold
+gotofirstpopulatedfolder()
 wave cap=$capname
 wave step=$stepname
 variable i=0
@@ -330,8 +328,7 @@ variable dcapsign
 variable dtimecontinuous
 setdatafolder root:
 svar /Z capname,discapname,stepname,cyclename,steptimename
-string fold =firstpopulatedfolder()
-setdatafolder $fold
+gotofirstpopulatedfolder()
 
 wave step=$stepname
 wave steptime = $steptimename
@@ -352,16 +349,13 @@ function chargetimecontinuity(chargesteps)
 wave chargesteps
 variable ctimecontinuous
 setdatafolder root:
-svar /Z capname,stepname,steptimename
-string fold =firstpopulatedfolder()
-setdatafolder $fold
+gotofirstpopulatedfolder()
 
-wave step=$stepname
-wave steptime = $steptimename
-
+wave stepid
+wave steptime
 variable i=0
 do
-	if ((step[i]==chargesteps[0]) && (step[i+1]==chargesteps[1]))
+	if ((stepid[i]==chargesteps[0]) && (stepid[i+1]==chargesteps[1]))
 		 ctimecontinuous = (steptime[i]<steptime[i+1])
 		break
 	endif

@@ -4,7 +4,7 @@ variable SEMplot
 string legendtext=""
 
 if (paramisdefault(ywaven) ) //if y wave and x wave names weren't passed, then prompts user for names in first named folder
-	firstpopulatedfolder(setf=1)
+	gotofirstpopulatedfolder()
 	string menustr = WaveList("*", ";", "" )
 	prompt ywaven, "Which wave do you want average and SEM for?", popup, menustr
 	prompt xwaven, "Which wave is the independent variable we want common values for?", popup, menustr
