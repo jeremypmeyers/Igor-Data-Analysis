@@ -71,7 +71,7 @@ if (axcount>1)
 		axinf=axisinfo(chartname,axn)
 		print axn,stringbykey("AXTYPE",axinf)
 		if (cmpstr("left",StringByKey("AXTYPE", axinf))==0)		
-			variable gap=0.03
+			variable gap=0.04
 			variable seg=(1-axcount*gap)/axcount
 			variable lowfrac = axcounter*(seg+gap)
 			variable hifrac = axcounter*(seg+gap)+seg

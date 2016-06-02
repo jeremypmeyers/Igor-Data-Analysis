@@ -145,7 +145,6 @@ do
 		wave w=tracenametowaveref(chartname,tn)
 		wavestats /q /R=[(numpnts(w)/20),] w
 		minr= (v_min<minr) ? v_min : minr
-		print i,minr
 	endif
 	i+=1
 while(1)
@@ -211,25 +210,115 @@ endswitch
 end
 
 function JIScoldcrank()
-string commandstring
-commandstring = "wavestats /q current;"
-commandstring += "variable /G fullcrankstep=stepid[v_minloc];"
-commandstring += "duplicate /o current c60pc;"
-commandstring += "c60pc = current[p]>0.7*v_min && current[p]<0.5*v_min ? c60pc[p] : NaN ;"
-commandstring += "wavestats /q c60pc;"
-commandstring += "variable /G partialcrankstep=stepid[((v_minloc+v_maxloc)/2)];"
-commandstring += "killwaves c60pc; killwsv();"
-executeallbatteries(commandstring)
-commandstring = "duplicate /o steptime stfullcrank, stpartcrank;"
-commandstring += " stfullcrank[] = (stepid[p]==fullcrankstep) ? steptime[p] : NaN ;"
-commandstring += " stpartcrank[] = (stepid[p]==partialcrankstep) ? steptime[p] : NaN ;"
-commandstring += "findlevel /Q /P stfullcrank,(10/60) ;"
-commandstring += "variable /G v10sec=voltage[v_levelx];"
-commandstring += "wavestats /q stfullcrank;"
-commandstring += "variable /g timefullcrank = V_max*60;"
-executeallbatteries(commandstring)
-commandstring += "wavestats /q stpartcrank;"
-commandstring += "variable /G crankduration = (v_max*60 +timefullcrank/0.6);"
-commandstring += "print timefullcrank, crankduration, crankduration>90"
-executeallbatteries(commandstring)
+//Goes through all batteries and calculates voltage at 10 seconds of full crank (Icc).
+//If optional 0.6*Icc step is run, determines full cold crank duration.
+//Variables created in each folder:
+//v10sec = Voltage at 10 seconds of full crank at Icc
+//timefullcrank = Duration of full crank (should be 30 seconds)
+//crankduration = Total duration of crank to 6V, scaled by intensity: 
+//							duration of 60% crank + (duration of full crank)/0.6 (should be > 90 seconds)
+//if part 2 isn't run, crankduration is NaN
+setdatafolder root:
+variable plot60pc = 0
+variable typeindex=0
+do
+	string typename= GetIndexedObjName(":",4,typeindex)
+	if (strlen(typename)==0)
+		break
+	endif
+	setdatafolder $typename
+	nvar /Z skip
+	if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
+			variable batteryindex=0
+			do
+				string batteryname=GetIndexedObjName(":",4,batteryindex)
+				if (strlen(batteryname)==0)
+					break
+				endif
+				setdatafolder $batteryname
+				nvar /Z skip
+				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
+					wave current; wavestats /q current
+					wave stepid
+					variable fullcrankstep=stepid[v_minloc] //finds location of maximum discharge current
+					variable icc=v_min
+					wave steptime
+					duplicate /FREE steptime stFullCrank
+					multithread stfullcrank[] = (stepid[p]==fullcrankstep) ? steptime[p] : NaN 
+					
+					svar timeunit
+					variable secondfactor=converttoseconds(timeunit)				// finds factor to express steptime in seconds
+					findlevel /Q /P stfullcrank,(10/secondfactor) 		// finds point corresponding to 10 seconds of crank
+					wave voltage
+					variable /G v10sec=voltage[v_levelx]			  		// creates variable v10sec, voltage at 10 seconds
+					
+					wavestats /q stfullcrank							  		// stats on full crank duration
+					variable /g timefullcrank = V_max*secondfactor 	// creates variable for duration of full crank in seconds
+				
+					duplicate /FREE current c60pc							  		// preparing to isolate the segment of I = 0.6*Icc
+					multithread c60pc = ((c60pc[p]>0.7*icc) && (c60pc[p]<0.5*icc)) ? c60pc[p] : NaN //finds current = 0.6*Icc
+					wavestats /q c60pc
+					print v_minloc,v_maxloc,stepid[v_minloc],stepid[v_maxloc]
+					killwaves c60pc
+					variable crank60pc=((v_minloc >=0) && (v_maxloc >=0))
+					plot60pc = (plot60pc || crank60pc) //if any batteries in test do 0.6*Icc crank, plot results in bar chart
+									
+					if (crank60pc) //0.6*Icc is "optional." These calculations are only executed if this step was run.
+						variable partialcrankstep=stepid[((v_minloc+v_maxloc)/2)]
+						print "Partial crank step =",partialcrankstep
+						duplicate /FREE steptime st60pcCrank
+						multithread st60pcCrank[] = (stepid[p]==partialcrankstep) ? steptime[p] : NaN
+						wavestats /q st60pcCrank
+						killwaves st60pccrank
+						print v_max*Secondfactor, timefullcrank/0.6
+						variable /g crankduration= (v_max*secondfactor) + timefullcrank/0.6
+					else
+						variable /g crankduration = NaN
+					endif
+					killwsv(); killflv() //deletes variables associated with wavestats and findlevel to keep folders clean
+					waveclear current,stepid,steptime,voltage
+					killwaves stfullcrank
+				endif
+				batteryindex+=1
+				setdatafolder root:
+				setdatafolder $typename
+			while(1)
+	endif
+	setdatafolder root:
+	typeindex+=1
+while(1)
+
+	AverageandSEMbytypeVariable(varname="v10sec",chartname="ColdCrankChart",oktoadd=1)
+	if (plot60pc !=0)
+		AverageandSEMbytypeVariable(varname="crankduration",chartname="ColdCrankChart",oktoadd=1)
+	endif
+
+	setdatafolder root:
+	cleanaxes("ColdCrankChart")
+	Label /W=ColdCrankChart v10sec "Voltage at\r10 seconds (V)"
+	Label /W=ColdCrankChart crankduration "Calculated crank\rduration (s)"
+
+	doupdate /W=ColdCrankChart
+	notebook recording text="JIS cold crank characteristics \r"
+	notebook recording picture={ColdCrankChart,0,1}
+	notebook recording text="\r"
+end
+
+
+
+function converttoseconds(timeunit)
+string timeunit
+variable factor
+strswitch (timeunit)
+	case "Hours":
+		factor = 3600
+		break
+	case "Minutes":
+		factor = 60
+		break
+	case "Seconds": 
+		factor = 1
+		break
+endswitch
+return factor
 end
