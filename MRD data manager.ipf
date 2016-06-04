@@ -283,6 +283,117 @@ variable numberofvariables
 	Colors(numberofvariables,varnames) 
 end
 
+
+function PbInfoPrompt()
+string manufacturer,mfgmenu
+string buildtype,buildtypemenu
+string buildmodel
+string application,appmenu
+mfgmenu = "Amara Raja;AmpNova;Battery Energy;BB Technologies;"
+mfgmenu +="C+D;Camel;Chaowei;Crown;DynaVolt;East Penn;"
+mfgmenu +="Eastman;Enerbrax;Enerya;Exide SF;"
+mfgmenu +="JCI;Lantian;Leoch;LivGuard;Moll;Moura;NBC;"
+mfgmenu +="NewMaxx;PBL;Pioneiro;Rolls;Starlit;Willard;Other"
+buildtypemenu="Flooded;VRLA;Tubular;Other"
+appmenu="Automotive-SLI;Automotive Start/Stop;Advanced Automotive;"
+appmenu+="Motorcycle;eRickshaw;eBike/eVehicle;Inverter;Solar;"
+appmenu+="Renewables/Grid Storage;Other"
+
+prompt manufacturer, "Battery manufacturer:",popup,mfgmenu
+prompt buildtype, "Build type:",popup,buildtypemenu
+prompt buildmodel, "Battery model:"
+prompt application, "Application:",popup,appmenu
+doprompt "Experimental specification",manufacturer,buildtype,buildmodel,application
+
+variable othermfg,otherbuild,otherapp,otherdecision
+othermfg=1-abs(cmpstr("Other",manufacturer))
+otherbuild=1-abs(cmpstr("Other",buildtype))
+otherapp=1-abs(cmpstr("Other",application))
+otherdecision=othermfg+2*otherbuild+4*otherapp
+print otherdecision
+prompt manufacturer,"Battery manufacturer:"
+prompt buildtype, "Battery type:"
+prompt application,"Application:"
+string dpstring = "Enter custom information:"
+
+switch (otherdecision)
+	case 0:
+		break
+	case 1:
+		manufacturer=""
+		doprompt dpstring, manufacturer
+		break
+	case 2:
+		buildtype=""
+		doprompt dpstring, buildtype
+		break
+	case 3:
+		manufacturer=""
+		buildtype=""
+		doprompt dpstring, manufacturer,buildtype
+		break
+	case 4:
+		application=""
+		doprompt dpstring, application
+		break
+	case 5:
+		manufacturer=""
+		application=""
+		doprompt dpstring, manufacturer,application
+		break
+	case 6:
+		buildtype=""
+		application=""
+		doprompt dpstring, buildtype,application
+		break
+	case 7:
+		manufacturer=""
+		buildtype=""
+		application=""
+		doprompt dpstring, manufacturer,buildtype,application
+		break
+endswitch
+
+setdatafolder root:
+string /G unique_expt=manufacturer+":"+secs2date(datetime,-2)+":"+buildtype+":"+application+":"+buildmodel
+string /G mfg = manufacturer
+print manufacturer,buildtype,buildmodel,application,Secs2Date(DateTime,-2)
+
+variable r,g,b
+r= 65280
+NewPanel /FLT /K=1 /N=CCON /W=(100,100,385,360) as "Control Information"
+TitleBox title1,win=CCON,font="Arial",fsize=14,pos={2,2},size={50,15},title="Control"
+popupmenu controlcolor,win=ccon,bodywidth=50,font="Arial",fsize=14,pos={52,18},size={150,15},title="Control color"
+popupmenu controlcolor,mode=0,popColor=(r,g,b),value="*COLORPOP*"
+button colorbutton,win=CCON,pos={2,70},size={300,20},fsize=16,font="Arial",title="Close Window and Approve Colors", proc=endpanelproc
+pauseforuser CCON
+ControlInfo controlcolor
+
+
+
+variable MRNegload=0
+variable MRPosload=0
+string MRNegSurf,MRPosSurf,surfmenu
+surfmenu="CMC;Lignin;PSS;PVA;Other"
+string MRbatchneg,MRbatchpos
+string expander=""
+string negcarbon=""
+variable pastingdate
+string gridneg,gridpos,gridmenu
+variable negplatecount,posplatecount
+end
+
+function endpanelproc(ctrlname) : buttoncontrol
+	string ctrlname
+	controlinfo controlcolor
+	print v_red,v_blue,v_green
+	killwindow CCon
+end
+
+
+
+
+
 function Colors(numberofvariables,varnames)
 	variable numberofvariables
 	wave /T varnames
@@ -334,6 +445,10 @@ function Colors(numberofvariables,varnames)
 	killwaves defaultR,defaultG,defaultB
 End
 
+
+
+
+
 function stopcolorproc(ctrlname) : buttoncontrol
 	string ctrlname
 	
@@ -352,7 +467,6 @@ function stopcolorproc(ctrlname) : buttoncontrol
 	while (popindex<numpnts(varnames))
 	killwindow colorcontrol
 end
-
 Function ColorPopMenuProc(ctrlName,popNum,popStr) : PopupMenuControl
 	String ctrlName
 	Variable popNum
