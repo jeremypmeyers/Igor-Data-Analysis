@@ -310,7 +310,6 @@ othermfg=1-abs(cmpstr("Other",manufacturer))
 otherbuild=1-abs(cmpstr("Other",buildtype))
 otherapp=1-abs(cmpstr("Other",application))
 otherdecision=othermfg+2*otherbuild+4*otherapp
-print otherdecision
 prompt manufacturer,"Battery manufacturer:"
 prompt buildtype, "Battery type:"
 prompt application,"Application:"
@@ -357,17 +356,220 @@ endswitch
 setdatafolder root:
 string /G unique_expt=manufacturer+":"+secs2date(datetime,-2)+":"+buildtype+":"+application+":"+buildmodel
 string /G mfg = manufacturer
-print manufacturer,buildtype,buildmodel,application,Secs2Date(DateTime,-2)
+pancontrol()
+panvariants()
 
-variable r,g,b
-r= 65280
-NewPanel /FLT /K=1 /N=CCON /W=(100,100,385,360) as "Control Information"
-TitleBox title1,win=CCON,font="Arial",fsize=14,pos={2,2},size={50,15},title="Control"
-popupmenu controlcolor,win=ccon,bodywidth=50,font="Arial",fsize=14,pos={52,18},size={150,15},title="Control color"
-popupmenu controlcolor,mode=0,popColor=(r,g,b),value="*COLORPOP*"
-button colorbutton,win=CCON,pos={2,70},size={300,20},fsize=16,font="Arial",title="Close Window and Approve Colors", proc=endpanelproc
-pauseforuser CCON
-ControlInfo controlcolor
+end
+
+function pancontrol()
+	variable r,g,b
+	r= 65280;g=0;b=0
+	variable panelw=450
+	variable panelh=200
+	NewPanel /FLT /K=1 /N=CCON /W=(100,100,100+panelw,100+panelh) as "Control Information"
+	
+	//title
+	string ts="Please enter data for control pasting (no MR)"
+	variable fs=16
+	variable sizew=strlen(ts)*fs/2.25
+	TitleBox title1,win=CCON,font="Arial",fsize=fs,frame=0,pos={200-(sizew/2),4},size={(sizew),17},title=ts
+	
+	//groupbox dividing title/instructions from data entry
+	GroupBox divider pos={2,24},size={panelw-2,1}
+	//popupmenu for color
+	popupmenu controlcolor,win=ccon,focusring=0,bodywidth=50,font="Arial"
+	ts="Control color (default for control is red)"
+	fs=14
+	sizew=strlen(ts)*fs/2.25
+	popupmenu controlcolor,fsize=14,pos={(panelw-sizew)/2,26},size={sizew,15},title=ts
+	popupmenu controlcolor,mode=0,popColor=(r,g,b),value="*COLORPOP*"
+	
+
+	variable yyyy, mm, dd
+	sscanf secs2date(datetime,-2), "%f-%f-%f",yyyy,mm,dd
+	fs=14
+	ts="Pasting date (mm-dd-yyyy)"
+	sizew=strlen(ts)*fs/2.25 +3*fs/2.25
+	
+	setvariable pastemonth,fsize=fs,focusring=0,pos={50,50},size={sizew+50,15},bodywidth=50,title=ts,value=_NUM:mm,limits={1,12,1}
+	setvariable pasteday,fsize=fs,focusring=0,pos={98+sizew,50},size={50,15},value=_NUM:dd,limits={1,31,1}
+	setvariable pasteyear,fsize=fs,focusring=0,pos={150+sizew,50},size={50,15},value=_NUM:yyyy,limits={2013,yyyy,0}
+	
+
+	ts="Negative electrode data"
+	fs=14
+	sizew=strlen(ts)*fs/2
+	titlebox negtitle,font="Arial",fsize=fs,fstyle=1,frame=0,pos={2,77},size={sizew,15},title=ts
+	ts="Negative grid type"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	variable bw=10*fs/1.8
+	sizew+=bw
+	popupmenu neggrid,fsize=14,focusring=0,pos={2,96},size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb;Other"
+	ts="Neg plate count"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	setvariable negcount,fsize=fs,pos={2,114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
+	ts="Expander recipe"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=panelw/2-sizew-5
+	setvariable expander,fsize=fs,pos={2,134},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_STR:""
+	//notes, if any
+	ts="Notes:"
+	fs=14
+	sizew=strlen(ts)*fs/1.8
+	bw=panelw-50
+	sizew+=bw
+	setvariable controlnotes,fsize=fs,pos={2,156},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_STR:""
+
+	//divider line between negative and positive information
+	GroupBox vertdivider pos={panelw/2,77},size={2,(112-77)}
+	//positive
+	ts="Positive electrode data"
+	fs=14
+	sizew=strlen(ts)*fs/2
+	titlebox postitle,font="Arial",fsize=fs,fstyle=1,focusring=0,frame=0,pos={panelw-2-sizew,77},size={sizew,15},title=ts
+	ts="Positive grid type"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	popupmenu posgrid,fsize=14,pos={(panelw-5-sizew),96},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb;Other"
+	
+	ts="Pos plate count"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	setvariable poscount,fsize=fs,pos={(panelw-5-sizew),114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
+
+	//button to collect inputs
+	ts="Close window and approve input"
+	fs=16
+	sizew=strlen(ts)*fs/1.9
+	button colorbutton,win=CCON,pos={(panelw-sizew)/2,panelh-24},size={sizew,20},fsize=fs,font="Arial",title=ts, proc=controlselect
+	pauseforuser CCON
+	ControlInfo controlcolor
+
+end
+
+
+function controlselect(ctrlname) : buttoncontrol
+	string ctrlname
+	setdatafolder root:
+	NewDataFolder /O/S Control
+	controlinfo controlcolor
+	variable /g red= v_red
+	variable /g blue =v_blue
+	variable /g green =v_green
+	controlinfo pasteyear
+	variable y=V_value
+	controlinfo pastemonth
+	variable m=V_value
+	controlinfo pasteday
+	variable d=V_value
+	string /g pastingdate = num2str(m)+"-"+num2str(d)+"-"+num2str(y)
+	controlinfo neggrid
+	string /g NegativeGrid=s_value
+	controlinfo posgrid
+	string /G PositiveGrid=s_value
+	controlinfo negcount
+	variable /G NegativePlateCount=v_value
+	controlinfo poscount
+	variable /G PositivePlatecount=v_value
+	setdatafolder root:
+	killwindow CCon
+end
+
+function panvariants()
+	variable r,g,b
+	r=7168;g=28416;b=48896
+	r=0;g=0;b=0
+	variable panelw=450
+	variable panelh=220
+	NewPanel /FLT /K=1 /N=VariantPanel /W=(100,100,100+panelw,100+panelh) as "Variant Information"
+	
+	//title
+	string ts="Please enter data for variant pasting"
+	variable fs=16
+	variable sizew=strlen(ts)*fs/2.25
+	TitleBox title1,win=VariantPanel,font="Arial",fsize=fs,frame=0,pos={200-(sizew/2),4},size={(sizew),17},title=ts
+	
+	//groupbox dividing title/instructions from data entry
+	GroupBox divider pos={2,24},size={panelw-2,1}
+	//popupmenu for color
+	popupmenu varcontrol,win=VariantPanel,focusring=0,bodywidth=50,font="Arial"
+	ts="Control color (default for control is red)"
+	fs=14
+	sizew=strlen(ts)*fs/2.25
+	popupmenu varcontrol,fsize=14,pos={(panelw-sizew)/2,26},size={sizew,15},title=ts
+	popupmenu varcontrol,mode=0,popColor=(r,g,b),value="*COLORPOP*";
+	
+
+	variable yyyy, mm, dd
+	sscanf secs2date(datetime,-2), "%f-%f-%f",yyyy,mm,dd
+	fs=14
+	ts="Pasting date (mm-dd-yyyy)"
+	sizew=strlen(ts)*fs/2.25 +3*fs/2.25
+	
+	setvariable pastemonth,fsize=fs,focusring=0,pos={50,50},size={sizew+50,15},bodywidth=50,title=ts,value=_NUM:mm,limits={1,12,1}
+	setvariable pasteday,fsize=fs,focusring=0,pos={98+sizew,50},size={50,15},value=_NUM:dd,limits={1,31,1}
+	setvariable pasteyear,fsize=fs,focusring=0,pos={150+sizew,50},size={50,15},value=_NUM:yyyy,limits={2013,yyyy,0}
+	
+
+	ts="Negative electrode data"
+	fs=14
+	sizew=strlen(ts)*fs/2
+	titlebox negtitle,font="Arial",fsize=fs,fstyle=1,frame=0,pos={2,77},size={sizew,15},title=ts
+	ts="Negative grid type"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	variable bw=10*fs/1.8
+	sizew+=bw
+	popupmenu neggrid,fsize=14,focusring=0,pos={2,96},size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb"
+	ts="Negative plate count"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	setvariable negcount,fsize=fs,pos={2,114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
+	ts="MR content (%)"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	setvariable negMR,fsize=fs,pos={2,130},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:0.03,limits={0.01,1,0.01}
+	setvariable negMR,proc=changeMRneg
+	//divider line between negative and positive information
+	GroupBox vertdivider pos={panelw/2,77},size={2,panelh-77-25}
+	//positive
+	ts="Positive electrode data"
+	fs=14
+	sizew=strlen(ts)*fs/2
+	titlebox postitle,font="Arial",fsize=fs,fstyle=1,focusring=0,frame=0,pos={panelw-2-sizew,77},size={sizew,15},title=ts
+	ts="Positive grid type"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	popupmenu posgrid,fsize=14,pos={panelw/2+2,96},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb"
+	ts="Positive plate count"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	setvariable poscount,fsize=fs,pos={2+panelw/2,114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
+
+	//button to collect inputs
+	ts="Close window and approve input"
+	fs=16
+	sizew=strlen(ts)*fs/1.9
+	button colorbutton,win=VariantPanel,pos={(panelw-sizew)/2,panelh-24},size={sizew,20},fsize=fs,font="Arial",title=ts, proc=variantselect
+	pauseforuser VariantPanel
+	ControlInfo controlcolor
 
 
 
@@ -383,19 +585,22 @@ string gridneg,gridpos,gridmenu
 variable negplatecount,posplatecount
 end
 
-function endpanelproc(ctrlname) : buttoncontrol
-	string ctrlname
-	controlinfo controlcolor
-	print v_red,v_blue,v_green
-	killwindow CCon
+function changeMRNeg(ctrlName,varNum,varStr,varName) : SetVariableControl
+	String ctrlName
+	Variable varNum	// value of variable as number
+	String varStr		// value of variable as string
+	String varName	// name of variable
+	popupmenu varcontrol popcolor=(7168,28416,48896)
+
 end
 
-
-
-
+function variantselect(ctrlname) : buttoncontrol
+	string ctrlname
+	killwindow variantpanel
+end
 
 function Colors(numberofvariables,varnames)
-	variable numberofvariables
+	variable numberofvariables 
 	wave /T varnames
 	make /N=10 defaultR,defaultG,defaultB
 	defaultR={65280,7168,7168,0,65280,16384,36864,65280,39168,0,0,39168}
@@ -467,6 +672,7 @@ function stopcolorproc(ctrlname) : buttoncontrol
 	while (popindex<numpnts(varnames))
 	killwindow colorcontrol
 end
+
 Function ColorPopMenuProc(ctrlName,popNum,popStr) : PopupMenuControl
 	String ctrlName
 	Variable popNum
