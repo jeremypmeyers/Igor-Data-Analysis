@@ -9,6 +9,7 @@
 	body += "Igor experiment saved here: \r"
 	body += igorloc+"\r"
 	sprintf msg, "mailto:peverill@molecularrebar.com?subject=%s&body=%s", subject,body
+	putscraptext "Yo"
 	BrowseUrl msg
 
 	end
@@ -22,6 +23,7 @@ Function /S NotebookSave()
 	print dd
 	string rn="ExptRecord"+dd+".rtf"
 	SaveNotebook /P=home recording as rn
+	
 	return rn
 end
 

@@ -48,11 +48,8 @@ menu "Battery Analysis"
 end
 
 
-macro LoadBatteryData()
-	LoadBatData()
-endmacro
 
-function LoadBatData()
+function LoadPbData()
 	setdatafolder root:
 	nvar /Z loadcount
 	if (!nvar_exists(loadcount))
@@ -61,13 +58,26 @@ function LoadBatData()
 		loadcount+=1
 	endif
 	
+	variable /G done=0
+	panelcontroltype()
+	
+	PauseForUser ControlWindow
+	if (!done)
+		do
+			panelvariant()
+			pauseforuser variantwindow
+			print "Done = ", done
+		while (done==0)
+	endif
+	killvariables done
+	return 1
+	
 	String loadtypes= "Arbin;Bitrode;Eclipse 9-variable format;Eclipse 10-variable format;Eclipse 20-variable format;Single Excel file;Single CSV file;Single Text File;All Excel files in a folder;All CSV files in a folder;Instron" 
 	String loadtype
 	if (IgorVersion()>=7)
 		execute("SetIgorOption PanelResolution = 0")
 	endif
 
-variable done=0
 	do
 	Prompt loadtype, "Select what data you want to load", popup, loadtypes
 	variable numberofvariables
@@ -86,10 +96,10 @@ variable done=0
 		Print "User clicked cancel"
 		Abort
 	endif
-	if (numberofvariables>0)
-		make/N=(numberofvariables) /T varnames
-		InputVariableNamesAndColors(numberofvariables)
-	endif
+//	if (numberofvariables>0)
+//		make/N=(numberofvariables) /T varnames
+//		InputVariableNamesAndColors(numberofvariables)
+//	endif
 
 	
 	strswitch(loadtype)
@@ -265,8 +275,6 @@ variable numberofvariables
 			varnames[9]=vartype10
 			break
 	endswitch
-	//varnames = cleanupname(varnames,1)
-	//varnames = uniquename(varnames,11,0)
 
 	variable index=0
 	string varname
@@ -364,15 +372,15 @@ end
 function pancontrol()
 	variable r,g,b
 	r= 65280;g=0;b=0
-	variable panelw=450
-	variable panelh=200
+	variable panelw=575
+	variable panelh=400 //220
 	NewPanel /FLT /K=1 /N=CCON /W=(100,100,100+panelw,100+panelh) as "Control Information"
 	
 	//title
 	string ts="Please enter data for control pasting (no MR)"
 	variable fs=16
 	variable sizew=strlen(ts)*fs/2.25
-	TitleBox title1,win=CCON,font="Arial",fsize=fs,frame=0,pos={200-(sizew/2),4},size={(sizew),17},title=ts
+	TitleBox title1,win=CCON,font="Arial",fsize=fs,frame=0,pos={panelw/2-(sizew/2),4},size={(sizew),17},title=ts
 	
 	//groupbox dividing title/instructions from data entry
 	GroupBox divider pos={2,24},size={panelw-2,1}
@@ -381,7 +389,7 @@ function pancontrol()
 	ts="Control color (default for control is red)"
 	fs=14
 	sizew=strlen(ts)*fs/2.25
-	popupmenu controlcolor,fsize=14,pos={(panelw-sizew)/2,26},size={sizew,15},title=ts
+	popupmenu controlcolor,fsize=14,pos={(panelw-sizew)/2,27},size={sizew,15},title=ts
 	popupmenu controlcolor,mode=0,popColor=(r,g,b),value="*COLORPOP*"
 	
 
@@ -396,55 +404,60 @@ function pancontrol()
 	setvariable pasteyear,fsize=fs,focusring=0,pos={150+sizew,50},size={50,15},value=_NUM:yyyy,limits={2013,yyyy,0}
 	
 
-	ts="Negative electrode data"
+	ts="Positive electrode data"
 	fs=14
 	sizew=strlen(ts)*fs/2
-	titlebox negtitle,font="Arial",fsize=fs,fstyle=1,frame=0,pos={2,77},size={sizew,15},title=ts
-	ts="Negative grid type"
+	titlebox postitle,font="Arial",fsize=fs,fstyle=1,frame=0,pos={2,77},size={sizew,15},title=ts
+	ts="Positive grid type"
 	fs=14
 	sizew=strlen(ts)*fs/2.2
 	variable bw=10*fs/1.8
 	sizew+=bw
-	popupmenu neggrid,fsize=14,focusring=0,pos={2,96},size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb;Other"
-	ts="Neg plate count"
+	popupmenu posgrid,fsize=14,focusring=0,pos={2,96},title=ts,value="Ca;Sb;Other",bodywidth=bw//,size={sizew,15}
+	ts="Pos plate count"
 	fs=14
 	sizew=strlen(ts)*fs/2.2
 	bw=10*fs/1.8
 	sizew+=bw
-	setvariable negcount,fsize=fs,pos={2,114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
+	setvariable poscount,fsize=fs,pos={2,114},focusring=0,bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}//,size={sizew,15}
 	ts="Expander recipe"
 	fs=14
 	sizew=strlen(ts)*fs/2.2
 	bw=panelw/2-sizew-5
-	setvariable expander,fsize=fs,pos={2,134},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_STR:""
+	setvariable expander,fsize=fs,pos={(panelw/2+2),140},focusring=0,bodywidth=bw,title=ts,value=_STR:""
+	popupmenu posgrid, pos={(panelw/2+2),200}
+	setvariable expander,pos={290,140}
+	print (panelw/2+2)
+	
 	//notes, if any
 	ts="Notes:"
 	fs=14
 	sizew=strlen(ts)*fs/1.8
 	bw=panelw-50
 	sizew+=bw
-	setvariable controlnotes,fsize=fs,pos={2,156},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_STR:""
+	setvariable controlnotes,fsize=fs,pos={2,165},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_STR:""
 
 	//divider line between negative and positive information
 	GroupBox vertdivider pos={panelw/2,77},size={2,(112-77)}
+	groupbox vertdivider2 pos={panelw/2,100},size={25,(112-77)}
 	//positive
-	ts="Positive electrode data"
+	ts="Negative electrode data"
 	fs=14
 	sizew=strlen(ts)*fs/2
-	titlebox postitle,font="Arial",fsize=fs,fstyle=1,focusring=0,frame=0,pos={panelw-2-sizew,77},size={sizew,15},title=ts
-	ts="Positive grid type"
+	titlebox negtitle,font="Arial",fsize=fs,fstyle=1,focusring=0,frame=0,pos={panelw-2-sizew,77},size={sizew,15},title=ts
+	ts="Negative grid type"
 	fs=14
 	sizew=strlen(ts)*fs/2.2
 	bw=10*fs/1.8
 	sizew+=bw
-	popupmenu posgrid,fsize=14,pos={(panelw-5-sizew),96},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb;Other"
+	popupmenu neggrid,fsize=14,pos={(panelw-5-sizew),96},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb;Other"
 	
-	ts="Pos plate count"
+	ts="Neg plate count"
 	fs=14
 	sizew=strlen(ts)*fs/2.2
 	bw=10*fs/1.8
 	sizew+=bw
-	setvariable poscount,fsize=fs,pos={(panelw-5-sizew),114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
+	setvariable negcount,fsize=fs,pos={(panelw-5-sizew),114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
 
 	//button to collect inputs
 	ts="Close window and approve input"
@@ -489,7 +502,7 @@ function panvariants()
 	r=7168;g=28416;b=48896
 	r=0;g=0;b=0
 	variable panelw=450
-	variable panelh=220
+	variable panelh=250
 	NewPanel /FLT /K=1 /N=VariantPanel /W=(100,100,100+panelw,100+panelh) as "Variant Information"
 	
 	//title
@@ -501,12 +514,12 @@ function panvariants()
 	//groupbox dividing title/instructions from data entry
 	GroupBox divider pos={2,24},size={panelw-2,1}
 	//popupmenu for color
-	popupmenu varcontrol,win=VariantPanel,focusring=0,bodywidth=50,font="Arial"
+	popupmenu varcolor,win=VariantPanel,focusring=0,bodywidth=50,font="Arial"
 	ts="Control color (default for control is red)"
 	fs=14
 	sizew=strlen(ts)*fs/2.25
-	popupmenu varcontrol,fsize=14,pos={(panelw-sizew)/2,26},size={sizew,15},title=ts
-	popupmenu varcontrol,mode=0,popColor=(r,g,b),value="*COLORPOP*";
+	popupmenu varcolor,fsize=14,pos={(panelw-sizew)/2,26},size={sizew,15},title=ts
+	popupmenu varcolor,mode=0,popColor=(r,g,b),value="*COLORPOP*";
 	
 
 	variable yyyy, mm, dd
@@ -520,48 +533,78 @@ function panvariants()
 	setvariable pasteyear,fsize=fs,focusring=0,pos={150+sizew,50},size={50,15},value=_NUM:yyyy,limits={2013,yyyy,0}
 	
 
-	ts="Negative electrode data"
+	ts="Positive electrode data"
 	fs=14
 	sizew=strlen(ts)*fs/2
-	titlebox negtitle,font="Arial",fsize=fs,fstyle=1,frame=0,pos={2,77},size={sizew,15},title=ts
-	ts="Negative grid type"
+	titlebox postitle,font="Arial",fsize=fs,fstyle=1,frame=0,pos={2,77},size={sizew,15},title=ts
+	ts="Positive grid type"
 	fs=14
 	sizew=strlen(ts)*fs/2.2
 	variable bw=10*fs/1.8
 	sizew+=bw
-	popupmenu neggrid,fsize=14,focusring=0,pos={2,96},size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb"
-	ts="Negative plate count"
-	fs=14
-	sizew=strlen(ts)*fs/2.2
-	bw=10*fs/1.8
-	sizew+=bw
-	setvariable negcount,fsize=fs,pos={2,114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
-	ts="MR content (%)"
-	fs=14
-	sizew=strlen(ts)*fs/2.2
-	bw=10*fs/1.8
-	sizew+=bw
-	setvariable negMR,fsize=fs,pos={2,130},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:0.03,limits={0.01,1,0.01}
-	setvariable negMR,proc=changeMRneg
-	//divider line between negative and positive information
-	GroupBox vertdivider pos={panelw/2,77},size={2,panelh-77-25}
-	//positive
-	ts="Positive electrode data"
-	fs=14
-	sizew=strlen(ts)*fs/2
-	titlebox postitle,font="Arial",fsize=fs,fstyle=1,focusring=0,frame=0,pos={panelw-2-sizew,77},size={sizew,15},title=ts
-	ts="Positive grid type"
-	fs=14
-	sizew=strlen(ts)*fs/2.2
-	bw=10*fs/1.8
-	sizew+=bw
-	popupmenu posgrid,fsize=14,pos={panelw/2+2,96},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb"
+	popupmenu posgrid,fsize=14,focusring=0,pos={2,96},size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb"
 	ts="Positive plate count"
 	fs=14
 	sizew=strlen(ts)*fs/2.2
 	bw=10*fs/1.8
 	sizew+=bw
-	setvariable poscount,fsize=fs,pos={2+panelw/2,114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
+	setvariable negcount,fsize=fs,pos={2,114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
+	
+	ts="Expander recipe"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=panelw/2-sizew-5
+	svar expguess=root:Control:expander
+	setvariable expander,fsize=fs,pos={2,140},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_STR:expguess
+	
+	ts="MR content (%)"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	setvariable posMR,fsize=fs,pos={2,165},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:0.0,limits={0.01,1,0.01}
+	setvariable posMR,proc=changeMR
+	//divider line between negative and positive information
+	GroupBox vertdivider pos={panelw/2,77},size={2,panelh-77-25}
+	//positive
+	ts="Negative electrode data"
+	fs=14
+	sizew=strlen(ts)*fs/2
+	titlebox negtitle,font="Arial",fsize=fs,fstyle=1,focusring=0,frame=0,pos={panelw-2-sizew,77},size={sizew,15},title=ts
+	ts="Negative grid type"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	popupmenu neggrid,fsize=14,pos={panelw/2+2,96},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value="Ca;Sb"
+	ts="Negative plate count"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	setvariable negcount,fsize=fs,pos={2+panelw/2,114},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:1,limits={1,100,1}
+	
+	ts="MR content (%)"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=10*fs/1.8
+	sizew+=bw
+	setvariable negMR,fsize=fs,pos={2+panelw/2,165},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_NUM:0.0,limits={0.01,1,0.01}
+	setvariable negMR,proc=changeMR
+
+	ts="Battery description"
+	fs=14
+	sizew=strlen(ts)*fs/2.2
+	bw=panelw-75
+	sizew+=bw
+	setvariable variantname,fsize=fs,pos={2,185},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_STR:""
+
+	ts="Notes:"
+	fs=14
+	sizew=strlen(ts)*fs/1.8
+	bw=panelw-50
+	sizew+=bw
+	setvariable varnotes,fsize=fs,pos={2,205},focusring=0,size={sizew,15},bodywidth=bw,title=ts,value=_STR:""
 
 	//button to collect inputs
 	ts="Close window and approve input"
@@ -570,6 +613,7 @@ function panvariants()
 	button colorbutton,win=VariantPanel,pos={(panelw-sizew)/2,panelh-24},size={sizew,20},fsize=fs,font="Arial",title=ts, proc=variantselect
 	pauseforuser VariantPanel
 	ControlInfo controlcolor
+	
 
 
 
@@ -585,18 +629,60 @@ string gridneg,gridpos,gridmenu
 variable negplatecount,posplatecount
 end
 
-function changeMRNeg(ctrlName,varNum,varStr,varName) : SetVariableControl
+function changeMRo(ctrlName,varNum,varStr,varName) : SetVariableControl
 	String ctrlName
 	Variable varNum	// value of variable as number
 	String varStr		// value of variable as string
 	String varName	// name of variable
-	popupmenu varcontrol popcolor=(7168,28416,48896)
+	controlinfo negMR
+	variable nMR=V_Value
+	if (nMR==0)
+		string nameneg="Con"
+	else
+		nameneg=num2str(nMR)+"% MR"
+	endif
+	controlinfo posMR
+	variable pMR=V_Value
+	if (pMR==0)
+		string namepos="Con"
+	else
+		namepos=num2str(pMR)+"% MR"
+	endif
+	
+	setvariable variantname value=_STR: namepos+"|"+nameneg
+	popupmenu varcolor popcolor=(7168,28416,48896)
 
 end
 
 function variantselect(ctrlname) : buttoncontrol
 	string ctrlname
+	setdatafolder root:
+	controlinfo varcolor
+	variable /g red= v_red
+	variable /g blue =v_blue
+	variable /g green =v_green
+	controlinfo pasteyear
+	variable y=V_value
+	controlinfo pastemonth
+	variable m=V_value
+	controlinfo pasteday
+	variable d=V_value
+	string /g pastingdate = num2str(m)+"-"+num2str(d)+"-"+num2str(y)
+	controlinfo neggrid
+	string /g NegativeGrid=s_value
+	controlinfo posgrid
+	string /G PositiveGrid=s_value
+	controlinfo negcount
+	variable /G NegativePlateCount=v_value
+	controlinfo poscount
+	variable /G PositivePlatecount=v_value
+	setdatafolder root:
+	controlinfo variantname
+	newdatafolder $s_value
+
 	killwindow variantpanel
+	
+	
 end
 
 function Colors(numberofvariables,varnames)
