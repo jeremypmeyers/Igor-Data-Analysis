@@ -892,3 +892,106 @@ function variantaccept(ctrlname): buttoncontrol
 	killwindow VariantWindow
 
 end
+
+
+function datastructure()
+newpanel /w=(100,100,750,300) /N=dataloadwindow
+titlebox maintitle, pos={10,10},font="Arial",fsize=18,title="Select structure of data to import",frame=0,focusring=0
+
+string loadmenustring="\"             ;All files in a folder (Excel, .CSV);Files in nested folder arranged by variant;"
+loadmenustring +="Multiple sheets from single Excel workbook;Arbin;Bitrode;Eclipse 9-variable format;Eclipse 10-variable format;Eclipse 20-variable format\""
+popupmenu  loadmenu, pos={12,33},font="Arial",fsize=14,title="How is data stored?",focusring=0 
+popupmenu loadmenu, value=#loadmenustring, proc=needmorecontext
+
+button accept pos={10,150},size={100,20},font="Arial",fsize=16,title="Continue",proc=acceptload
+button cancel pos={150,150},size={100,20},font="Arial",fsize=16,title="Cancel",proc=cancelload
+end
+
+function acceptload(ctrlname): buttoncontrol
+string ctrlname
+svar loadtype,whichexcelsheet,sheetnamestring,arbin
+controlinfo /W=dataloadwindow loadmenu
+loadtype=S_value
+strswitch (loadtype)
+case "Multiple sheets from single Excel workbook":
+		controlinfo /W=dataloadwindow#sheetwin stringprepop
+		sheetnamestring=S_value
+	break
+case "All files in a folder (Excel, .CSV)":
+		controlinfo /W=dataloadwindow#excelwin excelp
+		whichexcelsheet = S_value
+		if (cmpstr(whichexcelsheet,"Specify sheetname")==0)
+			controlinfo /W=dataloadwindow#sheetselectionwin  sheetstring
+			sheetnamestring = s_value
+		endif
+	break
+case "Arbin":
+		arbin = "yo yo yo"
+	break
+endswitch
+killwindow dataloadwindow
+end
+
+
+function cancelload(ctrlname): buttoncontrol
+string ctrlname
+killwindow dataloadwindow
+end
+
+function needmorecontext(ctrlname,popnum,popstr): PopupMenuControl
+string ctrlname
+variable popnum
+string popstr
+strswitch (popstr)
+ case "Multiple sheets from single Excel workbook":
+		killsubwindows("dataloadwindow")
+ 		newpanel /host=dataloadwindow /w=(20,50,500,150) /N=sheetwin 
+ 		setwindow dataloadwindow#sheetwin activeChildframe=0
+ 		ModifyPanel /W=dataloadwindow#sheetwin framestyle=0
+ 		titlebox excelsheets,font="Arial",fsize=14,title="Is there a string common to all sheet names\rthat you want to load from the workbook?",pos={10,10},frame=0,focusring=0
+ 		setvariable stringprepop, win=dataloadwindow#sheetwin, pos={10,50},font="Arial",fsize=14,title="String to pre-populate for sheetnames",bodywidth=150,value=_STR:""
+ 	break
+ case "All files in a folder (Excel, .CSV)":
+		killsubwindows("dataloadwindow")
+ 		newpanel /host=dataloadwindow /w=(20,50,500,100) /N=excelwin
+
+ 		ModifyPanel /W=dataloadwindow#excelwin, framestyle=0
+ 		setwindow dataloadwindow#excelwin activeChildframe=0 		
+ 		popupmenu excelp, win=dataloadwindow#excelwin,pos={10,10},font="Arial",fsize=14,title="If Excel files are included in folder, which sheets to input?",frame=0,focusring=0
+ 		popupmenu excelp, value=#"\"First sheet in each workbook;Specify sheetname;Guess which sheet to load\"",proc=specifysheetnames
+ 	break
+ case "Arbin":
+ 	break
+ default:
+ 	killsubwindows("dataloadwindow")
+ 	break
+endswitch
+end
+
+function specifysheetnames(ctrlname,popnum,popstr): PopupMenuControl
+string ctrlname
+variable popnum
+string popstr
+if (cmpstr(popstr,"Specify sheetname")==0)
+	newpanel /host=dataloadwindow /w=(20,105,400,130) /N=sheetselectionwin
+	setwindow dataloadwindow#sheetselectionwin activeChildframe=0
+
+	modifypanel /w=dataloadwindow#sheetselectionwin, framestyle=0
+	setvariable sheetstring,win=dataloadwindow#sheetselectionwin,pos={2,2},font="Arial",fsize=14,title="Common string for sheets to select:",bodywidth=150,value=_STR:""
+endif
+end
+
+function killsubwindows(hostwindowname)
+string hostwindowname
+string children=childwindowlist(hostwindowname)
+variable i=0
+do
+	string child=stringfromlist(i,children)
+	if (strlen(child)==0)
+		break
+	endif
+	string fullsubwindowname=hostwindowname+"#"+child
+	killwindow $fullsubwindowname
+	i+=1
+while(1)
+end

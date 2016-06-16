@@ -47,8 +47,6 @@ menu "Battery Analysis"
 
 end
 
-
-
 function LoadPbData()
 	setdatafolder root:
 	nvar /Z loadcount
@@ -70,37 +68,22 @@ function LoadPbData()
 		while (done==0)
 	endif
 	killvariables done
-	return 1
 	
-	String loadtypes= "Arbin;Bitrode;Eclipse 9-variable format;Eclipse 10-variable format;Eclipse 20-variable format;Single Excel file;Single CSV file;Single Text File;All Excel files in a folder;All CSV files in a folder;Instron" 
-	String loadtype
 	if (IgorVersion()>=7)
 		execute("SetIgorOption PanelResolution = 0")
 	endif
-
-	do
-	Prompt loadtype, "Select what data you want to load", popup, loadtypes
-	variable numberofvariables
-	string nvstring = "How many battery types or experimental variables in this experiment? (0-10)" 
-	if (strlen(GetIndexedObjName(":", 4,0))>0)
-		nvstring = "How many NEW battery types do you need to record? (0-10)"
+	
+	string /g loadtype
+	string /g whichexcelsheet
+	string /g sheetnamestring
+	string /g arbin
+	datastructure()
+	pauseforuser dataloadwindow
+	if (strlen(loadtype)==0)
+		print "User cancelled."
 	endif
-	Prompt numberofvariables, nvstring
-	string multmenu="No;Yes"
-	string combine
-	Prompt combine, "Do you need to combine multiple sheets/files for each battery?",popup, multmenu
-	string multiload
-	Prompt multiload, "Do you need to input from multiple sources beyond this import?",popup, multmenu
-	DoPrompt "What type of data are we about to import and process?", loadtype,numberofvariables,combine,multiload
-	if (v_flag==1)
-		Print "User clicked cancel"
-		Abort
-	endif
-//	if (numberofvariables>0)
-//		make/N=(numberofvariables) /T varnames
-//		InputVariableNamesAndColors(numberofvariables)
-//	endif
 
+	print loadtype
 	
 	strswitch(loadtype)
 		case "Arbin":
@@ -157,10 +140,7 @@ function LoadPbData()
 	if (cmpstr("Instron",loadtype)!=0)
 		createbaselinerunchart()
 	endif
-	if ((cmpstr(combine,"No")==0) && (cmpstr(multiload,"No")==0))
-		done=1
-	endif
-	while (done<1)
+
 	SaveExperiment
 	PbAnalysis()
 
@@ -172,124 +152,7 @@ function acceptvariables(ctrlname) : buttoncontrol
 end
 
 
-function InputVariableNamesAndColors(numberofvariables)
-variable numberofvariables
-	wave /T varnames
-	string vartype1,vartype2,vartype3,vartype4,vartype5,vartype6,vartype7,vartype8,vartype9,vartype10
-	Prompt vartype1,"Enter name/desigation for variable type 1"
-	Prompt vartype2,"Enter name/desigation for variable type 2"
-	Prompt vartype3,"Enter name/desigation for variable type 3"
-	Prompt vartype4,"Enter name/desigation for variable type 4"
-	Prompt vartype5,"Enter name/desigation for variable type 5"
-	Prompt vartype6,"Enter name/desigation for variable type 6"
-	Prompt vartype7,"Enter name/desigation for variable type 7"
-	Prompt vartype8,"Enter name/desigation for variable type 8"
-	Prompt vartype9,"Enter name/desigation for variable type 9"
-	Prompt vartype10,"Enter name/desigation for variable type 10"
-	string promptitle="Enter variable names (begin with letter,no special chars)"
-	
-	switch (numberofvariables)
-		case 1: 
-			DoPrompt promptitle,vartype1
-			varnames[0]=vartype1
-			break
-		case 2: 
-			DoPrompt promptitle,vartype1,vartype2
-			varnames[0]=vartype1
-			varnames[1]=vartype2
-			break
-		case 3: 
-			DoPrompt promptitle,vartype1,vartype2,vartype3
-			varnames[0]=vartype1
-			varnames[1]=vartype2
-			varnames[2]=vartype3
-			break
-		case 4: 
-			DoPrompt promptitle,vartype1,vartype2,vartype3,vartype4
-			varnames[0]=vartype1
-			varnames[1]=vartype2
-			varnames[2]=vartype3
-			varnames[3]=vartype4
-			break
-		case 5: 
-			DoPrompt promptitle,vartype1,vartype2,vartype3,vartype4,vartype5
-			varnames[0]=vartype1
-			varnames[1]=vartype2
-			varnames[2]=vartype3
-			varnames[3]=vartype4
-			varnames[4]=vartype5
-			break
-		case 6: 
-			DoPrompt promptitle,vartype1,vartype2,vartype3,vartype4,vartype5,vartype6
-			varnames[0]=vartype1
-			varnames[1]=vartype2
-			varnames[2]=vartype3
-			varnames[3]=vartype4
-			varnames[4]=vartype5
-			varnames[5]=vartype6
-			break
-		case 7: 
-			DoPrompt promptitle,vartype1,vartype2,vartype3,vartype4,vartype5,vartype6,vartype7
-			varnames[0]=vartype1
-			varnames[1]=vartype2
-			varnames[2]=vartype3
-			varnames[3]=vartype4
-			varnames[4]=vartype5
-			varnames[5]=vartype6
-			varnames[6]=vartype7
-			break
-		case 8: 
-			DoPrompt promptitle,vartype1,vartype2,vartype3,vartype4,vartype5,vartype6,vartype7,vartype8
-			varnames[0]=vartype1
-			varnames[1]=vartype2
-			varnames[2]=vartype3
-			varnames[3]=vartype4
-			varnames[4]=vartype5
-			varnames[5]=vartype6
-			varnames[6]=vartype7
-			varnames[7]=vartype8
-			break
-		case 9: 
-			DoPrompt promptitle,vartype1,vartype2,vartype3,vartype4,vartype5,vartype6,vartype7,vartype8,vartype9
-			varnames[0]=vartype1
-			varnames[1]=vartype2
-			varnames[2]=vartype3
-			varnames[3]=vartype4
-			varnames[4]=vartype5
-			varnames[5]=vartype6
-			varnames[6]=vartype7
-			varnames[7]=vartype8
-			varnames[8]=vartype9
-			break
-		case 10: 
-			DoPrompt promptitle,vartype1,vartype2,vartype3,vartype4,vartype5,vartype6,vartype7,vartype8,vartype9,vartype10
-			varnames[0]=vartype1
-			varnames[1]=vartype2
-			varnames[2]=vartype3
-			varnames[3]=vartype4
-			varnames[4]=vartype5
-			varnames[5]=vartype6
-			varnames[6]=vartype7
-			varnames[7]=vartype8
-			varnames[8]=vartype9
-			varnames[9]=vartype10
-			break
-	endswitch
 
-	variable index=0
-	string varname
-	do
-		varname = varnames[index]
-		varname = cleanupname(varname,1)
-		if (checkname(varname,11)!=0)
-			varname = uniquename(varname,11,1)
-		endif
-		setdatafolder root:
-		newdatafolder $varname
-		index+=1
-	while (index<numpnts(varnames))
-	Colors(numberofvariables,varnames) 
-end
 
 
 function PbInfoPrompt()

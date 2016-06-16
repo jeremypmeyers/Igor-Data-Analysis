@@ -8,20 +8,7 @@ String fileName
 String graphName
 Variable index=0
 
-variable nameLine,firstLine,numLines,firstColumn,numColumns
-nameline = 0
-firstline = 0
-numlines= 0
-firstcolumn = 0
-numcolumns = 0
-if (paramisdefault(loadtype))
-	prompt nameline, "What line are column names on?"
-	prompt firstline, "What line is the first line of data?"
-	prompt numlines, "How many lines?"
-	prompt firstcolumn, "What is the first column of data?"
-	prompt numcolumns, "How many columns?"
-	doprompt "Input info",nameline,firstline,numlines, firstcolumn,numcolumns
-endif
+
 
 NewPath/O temporaryPath	// This will put up a dialog to select a folder to load from.
 if (V_flag != 0)
@@ -31,6 +18,9 @@ endif
 pathName = "temporaryPath"
 pathinfo temporaryPath
 notebook recording text="Source folder is "+S_path+"\r"
+variable numberofvariants=itemsinlist(StringByKey("FOLDERS", datafolderdir(1)),",")
+folder(pathname,numberofvariants)
+return 1
 Variable result
 do			// Loop through each file in folder
 	fileName = IndexedFile(temporarypath, index,".csv")
@@ -90,7 +80,7 @@ if (cmpstr(currentbattype,"Skip this file")!=0)
 	variable /g blue=b
 	notebook recording text= "Data imported from "+filename+" to "+getdatafolder(1)+"\r"
 	if (paramisdefault(loadtype))
-			LoadWave /J/D/O/W/A/Q/L={nameline,firstline,numlines,firstcolumn,numcolumns}/P=$pathName filename
+			csv() //LoadWave /J/D/O/W/A/Q/L={nameline,firstline,numlines,firstcolumn,numcolumns}/P=$pathName filename
 	else
 		string ColumnInfoStr=""
 		strswitch(loadtype)	 
