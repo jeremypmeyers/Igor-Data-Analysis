@@ -11,6 +11,7 @@ variable typeindex=0
 do
 	string typename= GetIndexedObjName(":",4,typeindex)
 	if (strlen(typename)==0)
+		return typeindex
 		break
 	endif
 	setdatafolder $typename
@@ -543,7 +544,7 @@ do
 				endif
 				setdatafolder $batteryname
 				nvar /Z skip
-				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
+				if ( (!nvar_exists(skip))  || ( (nvar_exists(skip)) && (skip!=1) ) )
 					folder=getdatafolder(1)
 					foundfolderwithwaves=1
 					break
@@ -560,6 +561,28 @@ do
 		typeindex+=1
 	while(1)
 	setdatafolder $folder
+return folder
+end
+
+function/S gotofirstpopulatedvariant()
+setdatafolder root:
+string folder=""
+variable foundvariantfolder=0
+variable typeindex=0
+do
+	string typename= GetIndexedObjName(":",4,typeindex)
+	if (strlen(typename)==0)
+		break
+	endif
+	setdatafolder $typename
+	nvar /Z skip
+	if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
+		folder=getdatafolder(1)
+		break
+	endif
+	setdatafolder root:
+	typeindex+=1
+	while(1)
 return folder
 end
 

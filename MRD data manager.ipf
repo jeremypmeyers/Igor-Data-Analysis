@@ -61,13 +61,27 @@ function LoadBatData()
 		loadcount+=1
 	endif
 	
+	variable /G done=0
+	panelcontroltype()
+	
+	PauseForUser ControlWindow
+	if (!done)
+		do
+			panelvariant()
+			pauseforuser variantwindow
+			print "Done = ", done
+		while (done==0)
+	endif
+//	killvariables done
+	
+	
 	String loadtypes= "Arbin;Bitrode;Eclipse 9-variable format;Eclipse 10-variable format;Eclipse 20-variable format;Single Excel file;Single CSV file;Single Text File;All Excel files in a folder;All CSV files in a folder;Instron" 
 	String loadtype
 	if (IgorVersion()>=7)
 		execute("SetIgorOption PanelResolution = 0")
 	endif
 
-variable done=0
+done=0
 	do
 	Prompt loadtype, "Select what data you want to load", popup, loadtypes
 	variable numberofvariables
@@ -81,15 +95,15 @@ variable done=0
 	Prompt combine, "Do you need to combine multiple sheets/files for each battery?",popup, multmenu
 	string multiload
 	Prompt multiload, "Do you need to input from multiple sources beyond this import?",popup, multmenu
-	DoPrompt "What type of data are we about to import and process?", loadtype,numberofvariables,combine,multiload
+	DoPrompt "What type of data are we about to import and process?", loadtype
 	if (v_flag==1)
 		Print "User clicked cancel"
 		Abort
 	endif
-	if (numberofvariables>0)
-		make/N=(numberofvariables) /T varnames
-		InputVariableNamesAndColors(numberofvariables)
-	endif
+//	if (numberofvariables>0)
+//		make/N=(numberofvariables) /T varnames
+//		InputVariableNamesAndColors(numberofvariables)
+//	endif
 
 	
 	strswitch(loadtype)
@@ -142,18 +156,19 @@ variable done=0
 		case "Instron":
 			LoadAllCSVs(loadtype="Instron")
 			break
+		default:
+			break
 	endswitch
 	timeconvert()
 	if (cmpstr("Instron",loadtype)!=0)
 		createbaselinerunchart()
 	endif
-	if ((cmpstr(combine,"No")==0) && (cmpstr(multiload,"No")==0))
-		done=1
-	endif
+	done=1
 	while (done<1)
 	SaveExperiment
 	PbAnalysis()
-
+	pauseforuser analysiswindow
+	email()
 end
 
 function acceptvariables(ctrlname) : buttoncontrol
