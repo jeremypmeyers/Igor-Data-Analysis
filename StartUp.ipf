@@ -51,7 +51,7 @@ function Pbimport(ctrlname) : buttoncontrol
 string ctrlname
 notebook Recording text="Initiated lead-acid battery data import\r"
 killwindow ImportWindow
-LoadPbData()
+LoadBatData()
 
 end
 

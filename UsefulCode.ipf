@@ -11,6 +11,7 @@ variable typeindex=0
 do
 	string typename= GetIndexedObjName(":",4,typeindex)
 	if (strlen(typename)==0)
+		return typeindex
 		break
 	endif
 	setdatafolder $typename

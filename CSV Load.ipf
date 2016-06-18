@@ -19,11 +19,20 @@ pathName = "temporaryPath"
 pathinfo temporaryPath
 notebook recording text="Source folder is "+S_path+"\r"
 variable numberofvariants=itemsinlist(StringByKey("FOLDERS", datafolderdir(1)),",")
-folder(pathname,numberofvariants)
-return 1
+setdatafolder root:
+make /n=0  /o  /T filew
+make /n=0  /o filetypes
+print pathname
+folder(pathname)
+wave /t filew
+wave filetypes
+gendefaulttypes()
+wave filenumbers
+wave /t defaultfolders
 Variable result
 do			// Loop through each file in folder
-	fileName = IndexedFile(temporarypath, index,".csv")
+	fileName = filew[index] //IndexedFile(temporarypath, index,".csv")
+	print filename
 	if (strlen(fileName) == 0)			// No more files?
 		break									// Break out of loop
 	endif
@@ -39,7 +48,7 @@ setdatafolder root:
 string foldernameprompt="Enter battery name for data imported from file "+filename
 prompt foldername,foldernameprompt
 string battypeprompt="Enter variable type for data from "+filename
-string menulist=""
+string menulist=defaultfolders[filetypes[index]]+";"
 string objName
 variable findex=0
 do
@@ -80,7 +89,7 @@ if (cmpstr(currentbattype,"Skip this file")!=0)
 	variable /g blue=b
 	notebook recording text= "Data imported from "+filename+" to "+getdatafolder(1)+"\r"
 	if (paramisdefault(loadtype))
-			csv() //LoadWave /J/D/O/W/A/Q/L={nameline,firstline,numlines,firstcolumn,numcolumns}/P=$pathName filename
+			csv(pathname,filename) //LoadWave /J/D/O/W/A/Q/L={nameline,firstline,numlines,firstcolumn,numcolumns}/P=$pathName filename
 	else
 		string ColumnInfoStr=""
 		strswitch(loadtype)	 
@@ -167,7 +176,7 @@ if (cmpstr(currentbattype,"Skip this file")!=0)
 	setdatafolder root:
 	endif
 		index += 1
-	while (1) 
+	while (index<numpnts(filew)) 
 
 	if (Exists("temporaryPath"))		// Kill temp path if it exists
 		KillPath temporaryPath

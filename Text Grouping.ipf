@@ -25,16 +25,29 @@ variable i,j
 return lc
 end
 
-function folder(pn,nv)
+function folder(pn)
 string pn
-variable nv
-//newpath/o jpath
-//string pathname= "jpath"
+variable nv=executealltypes(" ")
+print nv
+setdatafolder root:
 string pathname = pn
 string fl=indexedfile($pathname,-1,".csv")
 fl+=indexedfile($pathname,-1,".xlsx")
 fl+=indexedfile($pathname,-1,".xls")
 fl+=indexedfile($pathname,-1,".txt")
+
+wave /T filew
+wave filetypes
+print "# items = ",itemsinlist(fl,";")
+redimension /n=(itemsinlist(fl,";")) filew
+print numpnts(filew)
+redimension /n=(itemsinlist(fl,";")) filetypes
+print numpnts(filetypes)
+print StringByKey("NUMTYPE", waveinfo(filew,0))
+
+
+wave /t fw=ListToTextWave(fl, ";")
+filew = fw
 
 fl=replacestring(".csv",fl,"")
 fl=replacestring(".xlsx",fl,"")
@@ -60,15 +73,6 @@ while (strlen(extracted)>0)
 
 fl=mrprotect(fl)
 
-//string regexp2="MR[[:digit:]]{1}?.[[:digit:]]{1,2}"
-//regexp="([[:digit:]])"
-//regexp=""
-//splitstring /E=regexp fl,extracted
-//do
-//	fl=replacestring(extracted,fl,"")
-//	splitstring /E=regexp fl,extracted
-//while(strlen(extracted)>0)
-
 variable i
 for(i=0;i<20;i+=1)	
 	fl=replacestring(" ;",fl,";")
@@ -78,7 +82,7 @@ fl=trimstring(fl,1)
 print fl
 variable li=itemsinlist(fl)
 make /n=(li,li) /FREE levarray
-wave /T  filew=listtotextwave(fl,";")
+
 i=0
 do
 	variable j=0
@@ -116,6 +120,7 @@ do
 			break
 		endif
 		print i,stringfromlist(str2num(index),completelist)
+		filetypes[str2num(index)]=i
 		j+=1
 	while(1)
 i+=1
@@ -241,3 +246,18 @@ variable i=0
 	endfor	
 return completed
 end
+
+function gendefaulttypes()
+wave /T filew
+wave filetypes
+wavestats /q filetypes
+make /n=(v_max+1)/o filenumbers
+make /n=(v_max+1)/o /T defaultfolders
+string flist=""
+variable i=0
+do
+	filenumbers[i]=i
+	defaultfolders[i] = getindexedobjname(":",4,i)
+	i+=1
+while (i<=v_max)
+END

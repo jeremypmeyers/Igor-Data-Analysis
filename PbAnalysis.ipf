@@ -13,11 +13,11 @@ function PbAnalysis()
 	SetDrawLayer UserBack
 	DrawPict /W=AnalysisWindow /RABS 3,15,283,41, procglobal#mrdwordmark
 	TitleBox  titleb,font="Arial",fcolor=(65535,65535,65535),fsize=16,pos={62,54},frame=0,title="Select experiment to analyze"
-	Button pb font="Arial",fsize=14, pos={55,76},size={200,14},title="Formation",proc=form
-	Button lib font="Arial",fsize=14, pos={55,94},size={200,14},title="Boost",proc=bst
-	Button echem font="Arial",fsize=14, pos={55,112},size={200,14},title="Capacity measurement",proc=capmeas
-	Button inst font="Arial",fsize=14, pos={55,130},size={200,14},title="High-rate discharge/cranking",proc=crank
-	Button por font="Arial",fsize=14, pos={55,148},size={200,14},title="Charge Acceptance",proc=chargeacc
+	Button frm font="Arial",fsize=14, pos={55,76},size={200,14},title="Formation",proc=form
+	Button boost font="Arial",fsize=14, pos={55,94},size={200,14},title="Boost",proc=bst
+	Button cap font="Arial",fsize=14, pos={55,112},size={200,14},title="Capacity measurement",proc=capmeas
+	Button crank font="Arial",fsize=14, pos={55,130},size={200,14},title="High-rate discharge/cranking",proc=CCA_HRD
+	Button CA font="Arial",fsize=14, pos={55,148},size={200,14},title="Charge Acceptance",proc=chargeacc
 	Button cyc font="Arial",fsize=14, pos={55,166},size={200,14},title="Cycling", proc=cycl
 	Button none font="Arial",fsize=14, pos={55,184},size={200,14},title="No automated analysis", proc=none
 	DrawPict /W=AnalysisWindow /RABS 2,204,279,254, procglobal#bdslogo
@@ -76,7 +76,7 @@ function Formation()
 //vs. time.
 	setdatafolder root:
 	string comparechart = "baselinerunchart"
-	excludeBaddata(comparechart)
+	//excludeBaddata(comparechart)
 	setdatafolder root:
 	avgsemvswave(ywaven="Voltage",xwaven="RunTime",chartname="FormationAvgbyType")
 	avgsemvswave(ywaven="Current", xwaven="RunTime",chartname="FormationAvgByType")

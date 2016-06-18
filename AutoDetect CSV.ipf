@@ -1,17 +1,22 @@
-function csv()
-loadwave /A /j /B="C=100,F=-2;" /L={0,0,90,0,0}
+function csv(pathname,filename)
 //variable numwaves=V_flag
-string pathname=S_path
-string filename=S_filename
+string pathname//=S_path
+string filename//=S_filename
+pathinfo pathname
+print "Successfully found \"pathname\" and location is ",s_path 
+loadwave /A /j /B="C=100,F=-2;" /L={0,0,90,0,0} /P=$pathname filename
 
 //string pathname="X:Data, Partners:Eastman, India:Tubular, 80Ah Rickshaw, 12V:Raw Data:"
 //string filename="Test_20160223095539_C4 Flat MR1.csv"
-NewPath /o defpath  , pathname
-pathinfo defpath
+//NewPath /o defpath  , pathname
+//pathinfo defpath
+
+loadwave /A /j /B="C=100,F=-2;" /L={0,0,90,0,0} /P=$pathname filename
+
 //loadwave /A /j /B="C=500,F=-2;" /L={0,0,90,0,0} /P=$"defpath"  filename
 string stext=s_wavenames
 
-loadwave /A /j /L={0,0,90,0,0} /P=$"defpath"  filename
+loadwave /A /j /L={0,0,90,0,0} /P=$pathname  filename
 string smixed=s_wavenames
 
 variable numwaves=V_flag
@@ -58,6 +63,6 @@ do
 while(i<numwaves)
 killwaves /a/z
 
-loadwave /J/O/W/A/Q /B=ColumnInfoString /L={(headerrow),(firstdatarow),90,0,0} /P=$"defpath"  filename
+loadwave /J/O/W/A/Q /B=ColumnInfoString /L={(headerrow),(firstdatarow),0,0,0} /P=$pathname  filename
 
 end
