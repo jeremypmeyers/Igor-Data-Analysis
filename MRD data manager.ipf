@@ -75,7 +75,9 @@ function LoadBatData()
 //	killvariables done
 	
 	
-	String loadtypes= "Arbin;Bitrode;Eclipse 9-variable format;Eclipse 10-variable format;Eclipse 20-variable format;Single Excel file;Single CSV file;Single Text File;All Excel files in a folder;All CSV files in a folder;Instron" 
+//	String loadtypes= "Arbin;Bitrode;Eclipse 9-variable format;Eclipse 10-variable format;Eclipse 20-variable format;Single Excel file;Single CSV file;Single Text File;All Excel files in a folder;All CSV files in a folder;Instron" 
+   string loadtypes= "All files in a folder (CSV);All files in a folder (Excel);All files in nested folders (CSV);All files in nested folders (Excel);"
+   loadtypes += "Multiple sheets in an Excel workbook;Arbin;Bitrode; Eclipse 9-variable format;Eclipse 10-variable format;Eclipse 20-variable format"
 	String loadtype
 	if (IgorVersion()>=7)
 		execute("SetIgorOption PanelResolution = 0")
@@ -100,10 +102,7 @@ done=0
 		Print "User clicked cancel"
 		Abort
 	endif
-//	if (numberofvariables>0)
-//		make/N=(numberofvariables) /T varnames
-//		InputVariableNamesAndColors(numberofvariables)
-//	endif
+
 
 	
 	strswitch(loadtype)
@@ -115,7 +114,6 @@ done=0
 			LoadAllCSVs(loadtype="Bitrode")
 			StandardWaveNames(loadtype="Bitrode")
 			break
-
 		case "Eclipse 9-variable format":
 			LoadAllExcel(loadtype="Eclipse 9-variable format")
 			StandardWaveNames(loadtype="Eclipse 9-variable format")
@@ -129,21 +127,27 @@ done=0
 			LoadAllCSVs(loadtype="Eclipse 20-variable format")
 			StandardWaveNames(loadtype="Eclipse 20-variable format")			
 			break
-		case "Single Excel file":
+		case "Multiple sheets in an Excel workbook":
 			XLLoad()
 			StandardWaveNames()
 			wavetypecorrection()
 			break
-		case "Single CSV file":
+		case "All files in nested folders (CSV)":
+			navigatefolders("CSV")
 			StandardWaveNames()
 			wavetypecorrection()
 			break
-		case "All Excel files in a folder":
-			LoadAllExcel()
+		case "All files in nested folders (Excel)":
+			navigatefolders("Excel")
 			StandardWaveNames()
 			wavetypecorrection()
 			break
-		case "All CSV files in a folder":
+		case "All files in a folder (Excel)":
+			AutoLoadExcel()
+			StandardWaveNames()
+			wavetypecorrection()
+			break
+		case "All files in a folder (CSV)":
 			LoadAllCSVs()
 			StandardWaveNames()
 			wavetypecorrection()
@@ -153,9 +157,6 @@ done=0
 			StandardWaveNames(loadtype="Iontensity")
 			wavetypecorrection()
 			break
-		case "Instron":
-			LoadAllCSVs(loadtype="Instron")
-			break
 		default:
 			break
 	endswitch
@@ -163,11 +164,18 @@ done=0
 	if (cmpstr("Instron",loadtype)!=0)
 		createbaselinerunchart()
 	endif
-	done=1
+	done=0
+	string another
+	string ms = "No;Yes"
+	prompt another, "Load another set?", popup, ms
+	doprompt "",another
+	if (cmpstr(another,"No")==0)
+		done=1
+	endif
 	while (done<1)
 	SaveExperiment
-	PbAnalysis()
-	pauseforuser analysiswindow
+	pbanalysis()
+	
 	email()
 end
 
@@ -998,11 +1006,11 @@ if (paramisdefault(loadtype))
 	while(1)
 	string fullstr  = WaveList("*",";","") // all strings in the first datafolder 
 	string nullstr = "No such wave;" //allows user to indicate that there is no wave of this type
-	string vmenustr =WaveList("Volt*", ";", "" ) +fullstr+nullstr
-	string curmenustr = WaveList("Cur*",";","") + fullstr+nullstr
+	string vmenustr =WaveList("*Vol*", ";", "" )+wavelist("*V*",";","") +fullstr+nullstr
+	string curmenustr = WaveList("*Cur*",";","") +Wavelist("*Amp*",";","")+ fullstr+nullstr
 	string totaltimemenustr = WaveList("*Time*",";","") + fullstr + nullstr
-	string steptimemenustr= WaveList("*Time*",";","")+ fullstr + nullstr
-	string capmenustr = WaveList("*Cap*",";","")+WaveList("*Charge*",";","") +fullstr + nullstr
+	string steptimemenustr= WaveList("*Step*Time*",";","")+ fullstr + nullstr
+	string capmenustr = WaveList("*Cap*",";","")+WaveList("*Charge*",";","") + WaveList("*Ah*",";","")+wavelist("*Amp*H*",";","")+fullstr + nullstr
 	string discapmenustr = WaveList("*Dis*",";","") + nullstr + fullstr
 	string stepmenustr = WaveList("*Step*",";","") + nullstr + fullstr
 	string cyclemenustr = WaveList("*Cycle*",";","") + nullstr + fullstr
@@ -1013,7 +1021,7 @@ if (paramisdefault(loadtype))
 	prompt cwn, "Select current wave", popup, curmenustr
 	prompt rtwn, "Select total elapsed time wave", popup, totaltimemenustr
 	prompt rstwn, "Select step time wave", popup, steptimemenustr
-	prompt capwn, "Select charge capacity/ step capacity", popup, capmenustr
+	prompt capwn, "Select capacity wave", popup, capmenustr
 	prompt discapwn, "Select discharge capacity if specialized wave exists", popup,discapmenustr
 	prompt stpwn, "Select index for step in program", popup, stepmenustr
 	prompt cycwn, "Select cycle counter for step in program", popup, cyclemenustr
@@ -1207,7 +1215,7 @@ do
 					wave RunTime, StepTime
 					if (!nvar_exists(timescaled))		
 						variable unit=0
-						make /N=3 /T timeunits={"Seconds","Minutes","Hours"}
+						make /N=3 /T /o timeunits={"Seconds","Minutes","Hours"}
 						do
 							if (cmpstr(timeunit,timeunits[unit])==0)
 								break

@@ -1,7 +1,8 @@
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 
-Function LoadallCSVs([loadtype])
+Function LoadallCSVs([loadtype,defaulttype,pathname])
 string loadtype
+string defaulttype
 String pathName			// Name of symbolic path or "" to get dialog
 String startfolder=getdatafolder(1)
 String fileName
@@ -9,14 +10,15 @@ String graphName
 Variable index=0
 
 
-
-NewPath/O temporaryPath	// This will put up a dialog to select a folder to load from.
-if (V_flag != 0)
-	Print "Cancelled opening file"
-	Abort
-endif
-pathName = "temporaryPath"
-pathinfo temporaryPath
+if (paramisdefault(pathname))
+	NewPath/O temporaryPath	// This will put up a dialog to select a folder to load from.
+	if (V_flag != 0)
+		Print "Cancelled opening file"
+		Abort
+	endif
+	pathName = "temporaryPath"
+endif 
+pathinfo $pathname
 notebook recording text="Source folder is "+S_path+"\r"
 variable numberofvariants=itemsinlist(StringByKey("FOLDERS", datafolderdir(1)),",")
 setdatafolder root:
@@ -48,7 +50,10 @@ setdatafolder root:
 string foldernameprompt="Enter battery name for data imported from file "+filename
 prompt foldername,foldernameprompt
 string battypeprompt="Enter variable type for data from "+filename
-string menulist=defaultfolders[filetypes[index]]+";"
+string menulist=""//defaultfolders[filetypes[index]]+";"
+if (!paramisdefault(defaulttype))
+	menulist+=defaulttype+";"
+endif
 string objName
 variable findex=0
 do
@@ -65,6 +70,9 @@ do
 while(1)
 menulist+=";Skip this file"
 string currentbattype=GetIndexedObjName(":",4,0)
+if (!paramisdefault(defaulttype))
+	currentbattype=defaulttype
+endif
 prompt currentbattype,battypeprompt,popup,menulist
 string promptstring="Info for data from "+filename
 variable foldernamecheck

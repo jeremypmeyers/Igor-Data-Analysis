@@ -2,55 +2,71 @@
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 #include <FilterDialog> menus=0
 
+function xl(fn,pathname,sheetselection,sheetname,sheetnumber)
+string fn
+string pathname
+string sheetselection
+string sheetname
+variable sheetnumber
 
-function ymd()
-variable y, m, d
-sscanf secs2date(datetime,-2), "%f-%f-%f",y,m,d
-print y
-print m
-print d
-end
-
-function xl()
-
-string fn=getXLfile()
-
-XLLoadWave /J=1 /Q fn
-print s_value
-
+XLLoadWave /J=1 /Q /P=$pathname fn
+string sheetnamelist=s_value
 string sn
-prompt sn, "Select sheetname",popup, s_value
-doprompt "Which sheet to import?",sn
-//=StringFromList(1, s_value)
-XLLoadWave /J=2 /S=sn /Q fn
-print s_value
 
-variable timenum=startmstimer
+strswitch (sheetselection)
+case "Location-based (1st, 2nd sheet, etc.)":
+	sn=stringfromlist(sheetnumber-1,sheetnamelist)
+	break
+case "Specific sheet name":
+	sn=sheetname
+	break
+case "Search for sheet with greatest number of columns":
+	variable maxcol=0
+	variable i=0
+	do
+		string sh=stringfromlist(i,sheetnamelist)
+		if (strlen(sh)==0)
+			break
+		endif
+		XLLoadWave /J=2 /S=sh /Q /P=$pathname fn
+		variable cols=numberbykey("LASTCOL",s_value)-numberbykey("FIRSTCOL",s_value)
+		if (cols>maxcol)
+			maxcol=cols
+			sn=sh
+		endif
+		print sh,sn,cols,maxcol
+		i+=1
+	while(1)
+	break
+endswitch
+//string sn
+//prompt sn, "Select sheetname",popup, s_value
+//doprompt "Which sheet to import?",sn
+//=StringFromList(1, s_value)
+XLLoadWave /J=2 /S=sn /Q /P=$pathname fn
 variable firstrow=numberbykey("FIRSTROW",s_value)
 variable lastrow=numberbykey("LASTROW",s_value)
-XLLoadWave /J=3 /S=sn /Q fn
-print s_value
+XLLoadWave /J=3 /S=sn /Q /P=$pathname fn
 string cellfirst=stringbykey("FIRST",s_value)
 string celllast=stringbykey("LAST",s_value)
 variable samplerow=min(100,floor(lastrow/2))
 string cellsample=stripnumbers(celllast)+num2str(samplerow)
+XLLoadWave /S=sn /Q /A /COLT="T" /o /R=($cellfirst,$cellsample)/P=$pathname fn
+XLLoadWave /S=sn /Q /C=(samplerow) /o /R=($cellfirst,$cellsample) /P=$pathname fn
 
-XLLoadWave /S=sn /Q /COLT="T" /o /R=($cellfirst,$cellsample) fn
-XLLoadWave /S=sn /Q /A /C=(samplerow) /o /R=($cellfirst,$cellsample) fn
 
-
-string wl=wavelist("Column*",";","")
+string wl=wavelist("Wave*",";","")
 string wn=stringfromlist(0,wl)
 wave /T wa = $wn
 variable k=(numpnts(wa)-1)
-print "startingpoint= ",k
 
-string wl2=wavelist("Wave*",";","")
-
-variable i=0
+string wl2=wavelist("Column*",";","")
+print itemsinlist(wl) , itemsinlist(wl2)
+i=0
 wn=stringfromlist(0,wl)
 wave /T wa=$wn
-make /N=(numpnts(wa)) /o numberoftextwaves,totalstringlength
+//make /N=(numpnts(wa)) /o numberoftextwaves,totalstringlength
+make /n=(samplerow-firstrow) /o numberoftextwaves, totalstringlength
 numberoftextwaves=0
 totalstringlength=0
 variable numberofnumericwaves=0
@@ -79,13 +95,26 @@ variable firstdatarow=v_minloc
 multithread totalstringlength[]= (numberoftextwaves==v_max) ? totalstringlength[p] : NaN
 wavestats /q totalstringlength
 variable headerrow=v_maxloc
-print stopmstimer(timenum)/1e6
-killwaves /a/z
+
 cellfirst=stripnumbers(cellfirst)+num2str(firstrow+firstdatarow)
 headerrow+=firstrow
 
-XLLoadWave /S=sn /Q /W=(headerrow)  /C=(samplerow) /o /R=($cellfirst,$celllast) fn
-print s_wavenames
+if (numberoftextwaves[v_maxloc] > 0.5*itemsinlist(wl2))
+	killwaves /a/z
+	XLLoadWave /S=sn /Q /W=(headerrow)  /C=(samplerow) /o /R=($cellfirst,$celllast)/P=$pathname fn
+else
+	i=0
+	print "No header/wave name information in file."
+	do
+		wn = stringfromlist(i,wl)
+		if (strlen(wn)==0)
+			break
+		endif
+		wave /t wa = $wn
+		killwaves wa
+		i+=1
+	while(1)
+endif
 end
 
 function /s stripnumbers(stripstring)

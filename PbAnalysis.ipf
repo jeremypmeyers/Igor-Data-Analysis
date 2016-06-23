@@ -8,19 +8,47 @@
 function PbAnalysis()
 //Creates window to prompt user for which automated procedures to run, depending upon the
 //type of experiment. 
-	NewPanel /FLT /W=(100,100,385,360) /N=AnalysisWindow as "Analysis"	
-	ModifyPanel cbRGB=(32000,32000,32000), fixedSize=1
-	SetDrawLayer UserBack
-	DrawPict /W=AnalysisWindow /RABS 3,15,283,41, procglobal#mrdwordmark
-	TitleBox  titleb,font="Arial",fcolor=(65535,65535,65535),fsize=16,pos={62,54},frame=0,title="Select experiment to analyze"
-	Button frm font="Arial",fsize=14, pos={55,76},size={200,14},title="Formation",proc=form
-	Button boost font="Arial",fsize=14, pos={55,94},size={200,14},title="Boost",proc=bst
-	Button cap font="Arial",fsize=14, pos={55,112},size={200,14},title="Capacity measurement",proc=capmeas
-	Button crank font="Arial",fsize=14, pos={55,130},size={200,14},title="High-rate discharge/cranking",proc=CCA_HRD
-	Button CA font="Arial",fsize=14, pos={55,148},size={200,14},title="Charge Acceptance",proc=chargeacc
-	Button cyc font="Arial",fsize=14, pos={55,166},size={200,14},title="Cycling", proc=cycl
-	Button none font="Arial",fsize=14, pos={55,184},size={200,14},title="No automated analysis", proc=none
-	DrawPict /W=AnalysisWindow /RABS 2,204,279,254, procglobal#bdslogo
+	string automatedanalysis
+	string menustring = "Formation;Boost;Capacity measurement;High-rate discharge/cranking;Charge acceptance;Cycling;No automated analysis"
+	prompt automatedanalysis,"Select type of experiment to analyze",popup,menustring
+	doprompt "Automated analysis",automatedanalysis
+	strswitch (automatedanalysis)
+	case "Formation":
+		formation()
+		break
+	case "Boost":
+		boostcharge()
+		break
+	case "Capacity measurement":
+		break
+	case "High-rate discharge/cranking":
+		CCA_HRD()
+		break
+	case "Charge acceptance":
+		//ChargeAcceptance()
+		break
+	case "Cycling":
+		break
+	case "No automated analysis":
+		break
+	endswitch
+
+	
+	//
+	//
+//	NewPanel /FLT /W=(100,100,385,360) /N=AnalysisWindow as "Analysis"	
+//	ModifyPanel cbRGB=(32000,32000,32000), fixedSize=1
+//	SetDrawLayer UserBack
+//	DrawPict /W=AnalysisWindow /RABS 3,15,283,41, procglobal#mrdwordmark
+//	TitleBox  titleb,font="Arial",fcolor=(65535,65535,65535),fsize=16,pos={62,54},frame=0,title="Select experiment to analyze"
+//	Button frm font="Arial",fsize=14, pos={55,76},size={200,14},title="Formation",proc=form
+//	Button boost font="Arial",fsize=14, pos={55,94},size={200,14},title="Boost",proc=bst
+//	Button cap font="Arial",fsize=14, pos={55,112},size={200,14},title="Capacity measurement",proc=capmeas
+//	Button crank font="Arial",fsize=14, pos={55,130},size={200,14},title="High-rate discharge/cranking",proc=crank
+//	Button CA font="Arial",fsize=14, pos={55,148},size={200,14},title="Charge Acceptance",proc=chargeacc
+//	Button cyc font="Arial",fsize=14, pos={55,166},size={200,14},title="Cycling", proc=cycl
+//	Button none font="Arial",fsize=14, pos={55,184},size={200,14},title="No automated analysis", proc=none
+//	DrawPict /W=AnalysisWindow /RABS 2,204,279,254, procglobal#bdslogo
 end
 
 function Form(ctrlname) : buttoncontrol
@@ -47,7 +75,31 @@ function Crank(ctrlname) : buttoncontrol
 string ctrlname
 notebook Recording text="Analyzing high-rate discharge/cranking experiment\r"
 killwindow AnalysisWindow
-CCA_HRD()
+//CCA_HRD()
+string CCAtype
+string CCAmenustr="EN;JIS cold crank;JIS high-rate discharge;SAE;Custom protocol"
+prompt CCAtype,"Select cranking protocol", popup, ccamenustr
+doprompt "CCA/high-rate discharge protocol",CCAtype
+strswitch(CCAtype)
+case "EN":
+	notebook recording text="EN cold crank specification\r"
+	break
+case "JIS cold crank":
+		notebook recording text="JIS cold crank specification\r"
+		JIScoldcrank()
+	break
+case "JIS high-rate discharge":
+		notebook recording text="JIS high-rate discharge specification\r"
+	break
+case "SAE":
+		notebook recording text="SAE cold crank specification\r"
+	break
+case "Custom protocol":
+		notebook recording text="Custom protocol\r"
+	break
+endswitch
+
+
 end
 
 function ChargeAcc(ctrlname) : buttoncontrol

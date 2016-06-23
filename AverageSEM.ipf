@@ -132,7 +132,15 @@ do
 	endif
 	setdatafolder root:
 	typeindex+=1
+
 while(1)
+	
+	//Textbox /W=$chartname /N=legendary legendtext
+
+	modifygraph /W=$chartname axisontop=1, axoffset=0, font="Arial",freepos=0,standoff=0
+	ModifyGraph lblPosMode=1,lblMargin=5
+	label /W=$chartname $avgWName, ywaven
+	label /W=$chartname bottom, xwaven
 
 
 end

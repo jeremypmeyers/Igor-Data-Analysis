@@ -443,3 +443,111 @@ string loadtype
 
 	return 0						// Signifies success.
 End
+
+Function AutoLoadExcel([defaulttype,pathname])
+	string defaulttype
+	String pathName			// Name of symbolic path or "" to get dialog
+	String startfolder=getdatafolder(1)
+	String fileName
+	String graphName
+	String sheetname=""
+	variable sheetnumber=1
+	Variable index=0
+	string sheetselection 
+	string sheetmenu="Location-based (1st, 2nd sheet, etc.);Specific sheet name;Search for sheet with greatest number of columns"
+	prompt sheetselection,"Which sheet to import from each file?",popup,sheetmenu
+	DoPrompt "Excel import information",sheetselection
+	if (cmpstr(sheetselection,"Specific sheet name")==0)
+		prompt sheetname, "Enter sheet name to import from each workbook"
+		doprompt "Excel import info (cont'd)", sheetname
+	endif
+	if (cmpstr(sheetselection,"Location-based (1st, 2nd sheet, etc.)")==0)
+		prompt sheetnumber,"Which sheet number to select from each workbook? (1, 2, 3)"
+		doprompt "Excel import info (cont'd)",sheetnumber
+	endif
+
+	if (paramisdefault(pathname))
+		NewPath/O ExcelPath			// This will put up a dialog
+		if (V_flag != 0)
+			Print "Cancelled opening file"
+			Abort
+		endif
+		pathName = "ExcelPath"
+	endif
+
+
+	Variable result
+	do			// Loop through each file in folder
+
+		fileName = IndexedFile($pathname, index,".xlsx")
+		if (strlen(filename)==0)
+				fileName = IndexedFile($pathname, index,".xls")
+		endif
+		if (strlen(fileName) == 0)			// No more files?
+			break									// Break out of loop
+		endif
+
+		string foldername=filename
+		foldername = ReplaceString(".csv",foldername,"")
+		foldername = ReplaceString(".xlsx",foldername,"")
+		foldername = ReplaceString(".xls",foldername,"")
+		foldername = ReplaceString(" ", foldername, "")
+		foldername = ReplaceString("-", foldername,"")
+		foldername = ReplaceString("_",foldername,"")
+
+		setdatafolder root:
+		string foldernameprompt="Enter battery name for data imported from file "+filename
+		prompt foldername,foldernameprompt
+		string battypeprompt="Enter variable type for data from "+filename
+		string menulist=""
+		string objName
+		variable findex=0
+		do
+			objName = GetIndexedObjName(":", 4, findex)
+			if (strlen(objName) == 0)
+				break
+			endif
+			if (findex>0)
+				menulist+=";"
+			endif
+			menulist+= objName
+			findex += 1
+		while(1)
+		menulist+=";Skip this file"
+		string currentbattype=GetIndexedObjName(":",4,0)
+		if (!paramisdefault(defaulttype))
+			currentbattype=defaulttype
+		endif
+		prompt currentbattype,battypeprompt,popup,menulist
+		string promptstring="Info for data from "+filename
+		doprompt "Battery load info", currentbattype, foldername
+		variable foldernamecheck
+
+		foldernamecheck=0
+		if (cmpstr(currentbattype,"Skip this file")!=0)		
+			foldername = cleanupname(foldername,1)
+			if (checkname(foldername,11)!=0)
+				foldername = uniquename(foldername,11,1)
+			endif
+			setdatafolder $currentbattype
+			nvar red,green,blue
+			variable r=red
+			variable g=green
+			variable b=blue
+			newdatafolder /o/s $foldername
+			variable/G red=r
+			variable/G green=g
+			variable/G blue=b
+			
+			xl(filename,pathname,sheetselection,sheetname,sheetnumber)			
+			setdatafolder root:
+		endif
+		index += 1
+	while (1) 
+
+	if (Exists("temporaryPath"))		// Kill temp path if it exists
+		KillPath temporaryPath
+	endif
+
+	return 0						// Signifies success.
+End

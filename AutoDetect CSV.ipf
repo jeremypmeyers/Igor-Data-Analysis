@@ -44,25 +44,34 @@ while(i<numwaves)
 	variable firstdatarow=v_minloc
 	multithread stringlength[]= (numberoftextwaves==v_max) ? stringlength[p] : NaN
 	wavestats /q stringlength
-	variable headerrow=v_maxloc
-	print firstdatarow,headerrow
-	
-
-i=0
-string columninfostring=""
-do
-	string wn=stringfromlist(i,smixed)
-	wave wa=$wn
-	wavestats /q /R=[firstdatarow] wa
-	if (v_numNans>0.5*V_npnts)
-		columninfostring+="C=1,F=-2;"
+	if (numberoftextwaves[v_maxloc]>= (0.8*itemsinlist(smixed)) )
+		variable headerrow=v_maxloc
+		i=0
+		string columninfostring=""
+		do
+			string wn=stringfromlist(i,smixed)
+			wave wa=$wn
+			wavestats /q /R=[firstdatarow] wa
+			if (v_numNans>0.5*V_npnts)
+				columninfostring+="C=1,F=-2;"
+			else
+				columninfostring+="C=1,F=0,T=4;"
+			endif
+		i+=1
+		while(i<numwaves)
+		killwaves /a/z
+		loadwave /J/O/W/A/Q /B=ColumnInfoString /L={(headerrow),(firstdatarow),0,0,0} /P=$pathname  filename
 	else
-		columninfostring+="C=1,F=0,T=4;"
+		print "No column headers provided"
+		i=0
+		do
+			string dw=stringfromlist(i,stext)
+			if (strlen(dw)==0)
+				break
+			endif
+			wave wa = $dw
+			killwaves wa
+			i+=1
+		while(1)
 	endif
-	i+=1
-while(i<numwaves)
-killwaves /a/z
-
-loadwave /J/O/W/A/Q /B=ColumnInfoString /L={(headerrow),(firstdatarow),0,0,0} /P=$pathname  filename
-
 end

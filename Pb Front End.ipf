@@ -483,6 +483,7 @@ function controlcomplete(ctrlname): buttoncontrol
 	variable /G RatedCapacity=V_Value	
 
 	if (cmpstr(ctrlname,"ControlDataAndQuit")==0)
+		setdatafolder root:
 		nvar done
 		done=1
 	endif

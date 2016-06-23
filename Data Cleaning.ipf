@@ -71,6 +71,30 @@ killwaves changes
 
 end
 
+
+
+function textwavestowaves()
+make /free /n=8 /T keywavenames ={"Voltage","Current","Capacity","DischargeCap","StepID","Cycle","RunTime","StepTime"}
+variable i=0
+do
+	string wn=keywavenames[i]
+	wave /Z wa = $wn
+	if (waveexists(wa))
+		print wn, numberbykey("NUMTYPE",waveinfo(wa,0))
+		if (numberbykey("NUMTYPE",waveinfo(wa,0)==0)
+			string wnt = wn+"text"
+			rename wa $wnt 
+			wave wt = $wnt
+			make /n=numpnts(wt) $wn
+			wave wnew = $wn
+			wn=str2num(wnt)
+		endif
+	endif
+	i+=1
+while (i<8)
+end
+
+
 function stringtimetotime([waven])
 string waven //wave name of HHH:MMM:SSS textwave
 
@@ -131,8 +155,8 @@ do
 	corrwa[i] -= corrwa[0]
 	i+=1
 while (i<numpnts(watxt))
-nvar timeunits = root:timeunits
-timeunits = 3
+//nvar timeunits = root:timeunits
+//timeunits = 3
 end
 
 function /S gettimelabel()

@@ -50,10 +50,7 @@ do
 				setdatafolder $batteryname
 				nvar /Z skip
 				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
-				nvar loadorder 
-				if ( (paramisdefault(whichload)) || ((!paramisdefault(whichload)) && (whichload== loadorder) ) )
 						execute commandstring // here's where we execute whatever we want to be done for each type
-				endif
 				endif
 				batteryindex+=1
 				setdatafolder root:
@@ -733,6 +730,8 @@ strswitch(multicycle) //Deciding between single and multi cycle data
 	Break
 	case "Yes":
 		//svar cyclename
+		cyclename="Cycle"
+
 		maxcyclesglobal()
 		setdatafolder root:
 		wave cyclenumbertext
@@ -796,7 +795,7 @@ strswitch(multicycle) //Deciding between single and multi cycle data
 		Label bottom "Cycle"
 	Break
 endswitch
-modifygraph minor=1
+modifygraph minor=0
 ExecuteAllBatteries("killwaves /z intersecttemp, multitemp")
 if (commandline==0) //prints the command that corresponds to the chart just created, for easy future recreation
 	print "intersect(ywaven=\""+ywavename+"\",ywavev=\""+ywavev+"\",xwaven=\""+xwaven+"\",stepv="+num2str(stepv)+",cyclev="+num2str(cyclev)+",multicycle=\""+multicycle+"\",graphtype=\""+graphtype+"\",charttitle=\""+charttitle+"\")"
@@ -914,7 +913,7 @@ endif
 
 if (cyclev==0) //Isolating the correct cycle
 else
-	svar cyclename
+	string cyclename="Cycle"
 	ExecuteAllBatteries(ywavenew+"*= ((" + cyclename + "==" + num2str(cyclev) + ")/(" + cyclename + "==" + num2str(cyclev) + "))")
 	ExecuteAllBatteries(xwavenew+"*= ((" + cyclename + "==" + num2str(cyclev) + ")/(" + cyclename + "==" + num2str(cyclev) + "))")
 	cycleappend = " (Cycle " + num2str(cyclev)+")"
@@ -966,7 +965,7 @@ endswitch
 Label $ywavenew ywaven
 Label bottom xwaven
 DoWindow/T $chartname,charttitle
-modifygraph minor=1
+modifygraph minor=0
 print charttitle + " (New waves are named " + ywavenew + " and "+xwavenew+")"
 if (commandline==0) //prints the command that corresponds to the chart just created, for easy future recreation
 	if ((cmpstr(operation1,"Skip")==0) && (cmpstr(operation2,"Skip")==0))
@@ -1001,7 +1000,7 @@ strswitch(multicycle)
 		ExecuteAllBatteries("duplicate /o "+capname+", RechargeFactor; variable/g v_min=-wavemin("+capname+"); rechargefactor /= v_min")
 	case "Yes":
 		ExecuteAllBatteries("killwaves /z RechargeFactor")
-		svar cyclename
+		string cyclename="Cycle"
 		variable typeindex=0,ci=1
 		executeallbatteries("variable/g LastCycle=wavemax("+cyclename+")")
 		do //Calculating the recharge factor for every cycle of every battery, now with more efficient code
@@ -1154,7 +1153,13 @@ end
 function GraphItAll([ywaven,xwaven,chartname]) //modified baselinerunchart to be generalized to all variables	
 string ywaven, xwaven, chartname
 if (paramisdefault(chartname))
-	chartname = "GraphItAllChart"
+	chartname = "GraphAll"
+	if (!paramisdefault(ywaven))
+		chartname += ywaven
+		if (!paramisdefault(xwaven))
+			chartname+="vs"+xwaven
+		endif
+	endif
 endif
 variable leftaxes=0
 setdatafolder root:
@@ -1450,7 +1455,7 @@ string /G timelabel = "Time("+unitstrings[desiredtimeunits-1]+")"
 label /W=tempstat bottom timelabel
 Textbox /W=tempstat /N=legendary legendstring
 ModifyGraph /W=tempstat lblPosMode=1
-modifygraph minor=1
+modifygraph minor=0
 killwaves unitstrings
 end
 
@@ -1465,7 +1470,7 @@ avgsemvswave(ywaven=tempname,xwaven=totaltimename,chartname="TempStat",semplot=2
 Label /W=TempStat $vwavename "Voltage(V)"
 Label /W=TempStat $curwavename "Current(A)"
 Label /W=TempStat $tempname "Temperature (°C)"
-modifygraph minor=1
+modifygraph minor=0
 svar timelabel
 Label /W=TempStat bottom timelabel
 variable timend=stopmstimer(tim)
@@ -1481,10 +1486,8 @@ avgsemvswave(ywaven=curwavename, xwaven=totaltimename,chartname="baselinerunchar
 Label /W=baselinerunchartSEM $vwavename "Voltage(V)"
 Label /W=baselinerunchartSEM $curwavename "Current(A)"
 ModifyGraph axisEnab($vwavename)={0,0.48},axisEnab($curwavename)={0.52,1}
-modifygraph minor=1
+modifygraph minor=0
 Label /W=baselinerunchartSEM bottom timelabel
-variable timend=stopmstimer(tim)
-print timend/1000000, "seconds"
 end
 
 

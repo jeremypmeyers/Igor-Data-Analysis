@@ -8,7 +8,7 @@
 	string igorloc=SharePointHTMLPath(igorname)
 	body += "Igor experiment saved here: \r"
 	body += igorloc+"\r"
-	sprintf msg, "mailto:peverill@molecularrebar.com?subject=%s&body=%s", subject,body
+	sprintf msg, "mailto:leadproddev@molecularrebar.com?subject=%s&body=%s", subject,body
 	putscraptext "Yo"
 	BrowseUrl msg
 

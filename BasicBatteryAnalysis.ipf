@@ -356,7 +356,7 @@ strswitch(task)
 		case "Yes":
 		avgsemvswave(ywaven=vwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend,semplot=2)
 		avgsemvswave(ywaven=curwavename+newappend,xwaven=totaltimename+newappend,chartname="baselinerunchart"+newappend,semplot=2)
-		modifygraph minor=1
+		modifygraph minor=0
 		break
 	endswitch
 	Label $vwavename+newappend "Voltage(V)"
