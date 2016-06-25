@@ -74,24 +74,26 @@ end
 
 
 function textwavestowaves()
-make /free /n=8 /T keywavenames ={"Voltage","Current","Capacity","DischargeCap","StepID","Cycle","RunTime","StepTime"}
+make /free /n=6 /T keywavenames ={"Voltage","Current","Capacity","DischargeCap","StepID","Cycle"}
 variable i=0
 do
 	string wn=keywavenames[i]
 	wave /Z wa = $wn
 	if (waveexists(wa))
-		print wn, numberbykey("NUMTYPE",waveinfo(wa,0))
-		if (numberbykey("NUMTYPE",waveinfo(wa,0)==0)
+		if (numberbykey("NUMTYPE",waveinfo(wa,0))==0)
 			string wnt = wn+"text"
 			rename wa $wnt 
-			wave wt = $wnt
-			make /n=numpnts(wt) $wn
+			wave /T wt = $wnt
+			make /n=(numpnts(wt)) $wn
 			wave wnew = $wn
-			wn=str2num(wnt)
+			multithread wnew[]  =str2num(wt[p])
 		endif
 	endif
 	i+=1
-while (i<8)
+while (i<6)
+
+make /free /n=2 /T timewavenames={"RunTime","StepTime"}
+
 end
 
 

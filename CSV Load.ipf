@@ -39,6 +39,25 @@ do			// Loop through each file in folder
 		break									// Break out of loop
 	endif
 string foldername=filename
+if (!paramisdefault(loadtype))
+if (cmpstr(loadtype,"Bitrode")==0)
+	foldername=replacestring("Test",foldername,"")
+	string regexp="([[:digit:]]{10,} [A-E][[:digit:]]{1,2})"
+	string extracted
+	splitstring /E=regexp foldername, extracted
+	foldername=ReplaceString(extracted, foldername, "")
+	 regexp="([[:digit:]]{10,})"
+	splitstring /E=regexp foldername, extracted
+	foldername=ReplaceString(extracted, foldername, "")	
+endif
+endif
+
+if (stringmatch(foldername,"_*")==1)
+do
+	foldername=replacestring("_",foldername,"",0,1)
+while (stringmatch(foldername,"_*")==1)
+endif
+
 foldername = ReplaceString(".csv",foldername,"")
 foldername = ReplaceString(" ", foldername, "")
 foldername = ReplaceString("-", foldername,"")
@@ -77,6 +96,8 @@ prompt currentbattype,battypeprompt,popup,menulist
 string promptstring="Info for data from "+filename
 variable foldernamecheck
 foldernamecheck=0
+
+
 doprompt promptstring,currentbattype,foldername
 if (cmpstr(currentbattype,"Skip this file")!=0)
 	foldername = cleanupname(foldername,1)
