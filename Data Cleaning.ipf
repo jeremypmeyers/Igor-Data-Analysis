@@ -93,6 +93,17 @@ do
 while (i<6)
 
 make /free /n=2 /T timewavenames={"RunTime","StepTime"}
+i=0
+do
+	wn = timewavenames[i]
+	wave /Z wa = $wn
+	if (waveexists(wa))
+		if (numberbykey("NUMTYPE",waveinfo(wa,0))==0)
+			stringtimetotime(waven=wn)
+		endif
+	endif
+	i+=1
+while(i<2)
 
 end
 
@@ -112,9 +123,10 @@ setdatafolder $startfolder
 endif
 
 wave /T watxt = $waven
-string corrn = waven+"corr" //corrected wave name
-make /N=(numpnts(watxt)) /D /O $corrn
-wave corrwa = $corrn
+string wnt=waven+"text"
+rename watxt $wnt
+make /N=(numpnts(watxt)) /D /O $waven
+wave corrwa = $waven
 variable i=0
 do
 	string ti = watxt[i]
@@ -150,9 +162,6 @@ do
 		ms = str2num(ti[secpos+1,strlen(ti)-1])
 	endif
 	timestep += hr + mi/60 + se/3600 +ms/3600000	
-	if (cmpstr(corrn,"Realtime"))
-		print getdatafolder(1), i,yearpos,monpos,daypos// year,month,day,hr,mi,se,ms
-	endif
 	corrwa[i] = timestep
 	corrwa[i] -= corrwa[0]
 	i+=1

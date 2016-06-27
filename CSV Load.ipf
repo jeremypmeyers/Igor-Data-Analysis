@@ -8,6 +8,7 @@ String startfolder=getdatafolder(1)
 String fileName
 String graphName
 Variable index=0
+string currentbattype=""
 
 
 if (paramisdefault(pathname))
@@ -28,7 +29,7 @@ print pathname
 folder(pathname)
 wave /t filew
 wave filetypes
-gendefaulttypes()
+//gendefaulttypes()
 wave filenumbers
 wave /t defaultfolders
 Variable result
@@ -88,7 +89,7 @@ do
 	findex += 1
 while(1)
 menulist+=";Skip this file"
-string currentbattype=GetIndexedObjName(":",4,0)
+//GetIndexedObjName(":",4,0)
 if (!paramisdefault(defaulttype))
 	currentbattype=defaulttype
 endif

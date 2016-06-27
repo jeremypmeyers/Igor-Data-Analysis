@@ -25,26 +25,36 @@ variable i,j
 return lc
 end
 
-function folder(pn)
+function folder(pn,[loadtype])
 string pn
+string loadtype
 variable nv=executealltypes(" ")
-print nv
 setdatafolder root:
 string pathname = pn
-string fl=indexedfile($pathname,-1,".csv")
-fl+=indexedfile($pathname,-1,".xlsx")
-fl+=indexedfile($pathname,-1,".xls")
-fl+=indexedfile($pathname,-1,".txt")
+if (paramisdefault(loadtype))
+	string fl=indexedfile($pathname,-1,".csv")
+	fl+=indexedfile($pathname,-1,".xlsx")
+	fl+=indexedfile($pathname,-1,".xls")
+	fl+=indexedfile($pathname,-1,".txt")
+else
+	strswitch(loadtype)
+	case "CSV":
+		fl=indexedfile($pathname,-1,".csv")
+		break
+	case "Excel":
+		fl=indexedfile($pathname,-1,".xlsx")
+		fl+=indexedfile($pathname,-1,".xls")
+		break
+	case "text":
+		fl=indexedfile($pathname,-1,".txt")
+		break
+	endswitch
+endif
 
 wave /T filew
 wave filetypes
-print "# items = ",itemsinlist(fl,";")
 redimension /n=(itemsinlist(fl,";")) filew
-print numpnts(filew)
 redimension /n=(itemsinlist(fl,";")) filetypes
-print numpnts(filetypes)
-print StringByKey("NUMTYPE", waveinfo(filew,0))
-
 
 wave /t fw=ListToTextWave(fl, ";")
 filew = fw
@@ -125,6 +135,10 @@ do
 	while(1)
 i+=1
 while(i<numpnts(indices))
+
+sort filetypes, filetypes, filew
+print filew
+print filetypes
 end
 
 
@@ -225,9 +239,8 @@ string completed=""
 wave /t checkw=listtotextwave(fn,";")
 variable i=0
 	for(i=0;i<numpnts(checkw);i+=1)	// Initialize variables;continue test
-		string		regexp ="(MR[[:digit:]]{1,3}?[. ][[:digit:]]{1,3}"
-					regexp+="|MR[[:digit:]]{1,3})"
-
+		string regexp ="(MR[[:digit:]]{1,3}?[. ][[:digit:]]{1,3}"
+				 regexp+="|MR[[:digit:]]{1,3})"
 		string extracted
 		splitstring /E=regexp checkw[i], extracted
 		string mrcontent=extracted

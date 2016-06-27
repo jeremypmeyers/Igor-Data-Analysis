@@ -69,7 +69,6 @@ function LoadBatData()
 		do
 			panelvariant()
 			pauseforuser variantwindow
-			print "Done = ", done
 		while (done==0)
 	endif
 //	killvariables done
@@ -966,7 +965,9 @@ end
 function StandardWaveNames([loadtype])
 string loadtype
 setdatafolder root:
-
+variable changesmade
+do
+changesmade=0
 if (paramisdefault(loadtype))
 	variable foundfolderwithwaves=0
 	variable typeindex=0
@@ -987,9 +988,10 @@ if (paramisdefault(loadtype))
 				setdatafolder $batteryname
 				nvar /Z skip
 				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
-					foundfolderwithwaves=1 	//found a folder containing waves
 					nvar /Z names_standardized
 					if (!nvar_exists(names_standardized))
+						foundfolderwithwaves=1 	//found a folder containing waves
+						string firstchanges=wavelist("*",";","")
 						break
 					endif
 				endif
@@ -1016,6 +1018,14 @@ if (paramisdefault(loadtype))
 	string cyclemenustr = WaveList("*Cycle*",";","") + nullstr + fullstr
 	string unitsmenu = "Seconds; Minutes; Hours;" 
 	string vwn,cwn,rtwn, rstwn, capwn, discapwn,stpwn,cycwn
+	vwn=""
+	cwn=""
+	rtwn=""
+	rstwn=""
+	capwn=""
+	discapwn=""
+	stpwn=""
+	cycwn=""
 	string rtu
 	prompt vwn, "Select voltage wave", popup, vmenustr
 	prompt cwn, "Select current wave", popup, curmenustr
@@ -1026,7 +1036,9 @@ if (paramisdefault(loadtype))
 	prompt stpwn, "Select index for step in program", popup, stepmenustr
 	prompt cycwn, "Select cycle counter for step in program", popup, cyclemenustr
 	prompt rtu, "What units does data file report time in?", popup, unitsmenu 
-	doprompt "Select wave names/units for this experiment",vwn,cwn,rtwn,rstwn,capwn,discapwn,stpwn,cycwn,rtu
+	if (foundfolderwithwaves != 0)
+		doprompt "Select wave names/units for this experiment",vwn,cwn,rtwn,rstwn,capwn,discapwn,stpwn,cycwn,rtu
+	endif
 	if (v_flag==1)
 		Print "User clicked cancel"
 		Abort
@@ -1102,6 +1114,9 @@ else //if paramisdefault
 	endswitch
 setdatafolder root:
 endif
+if ((paramisdefault(loadtype)) && (foundfolderwithwaves==0))
+	break
+endif
 setdatafolder root:
 typeindex=0
 do
@@ -1119,52 +1134,59 @@ do
 					break
 				endif
 				setdatafolder $batteryname
-				print getdatafolder(1)
 				nvar /Z skip
 				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
 					nvar /Z names_standardized
-					if (!nvar_exists(names_standardized))
+					if ( (!nvar_exists(names_standardized)) && (cmpstr(firstchanges,wavelist("*",";",""))==0) )
 						if (cmpstr(vwn,"No such wave")!=0)
 							wave v =$vwn
 							rename v Voltage
+							changesmade +=1
 							waveclear v
 						endif
 						if (cmpstr(cwn,"No such wave")!=0)
 							wave a =$cwn
 							rename a Current
+							changesmade +=1
 							waveclear a
 						endif
 						if (cmpstr(rtwn,"No such wave")!=0)
 							wave rt =$rtwn
 							rename rt RunTime
+							changesmade +=1
 							waveclear rt
 						endif
 						if (cmpstr(rstwn,"No such wave")!=0)
 							wave st =$rstwn
 							rename st StepTime
+							changesmade +=1
 							waveclear st
 						endif
 						if (cmpstr(capwn,"No such wave")!=0)
 							wave cap =$capwn
 							rename cap Capacity
+							changesmade +=1
 							waveclear cap
 						endif			
 									
 						if (cmpstr(discapwn,"No such wave")!=0)
 							wave dc =$discapwn
 							rename dc DischargeCap
+							changesmade +=1
 							waveclear dc
 						endif							
 											
 						if (cmpstr(stpwn,"No such wave")!=0)
 							wave step =$stpwn
 							rename step StepID
+							changesmade +=1
 							waveclear step
 						endif		
 						
 						if (cmpstr(cycwn,"No such wave")!=0)
 							wave cyc =$cycwn
 							rename cyc Cycle
+							changesmade +=1
 							waveclear cyc
 						endif		
 						
@@ -1181,6 +1203,7 @@ do
 	setdatafolder root:
 	typeindex+=1
 while(1)
+while (changesmade!=0)
 end
 
 function timeconvert()
