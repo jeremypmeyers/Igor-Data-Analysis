@@ -116,45 +116,47 @@ done=0
 		case "Eclipse 9-variable format":
 			LoadAllExcel(loadtype="Eclipse 9-variable format")
 			StandardWaveNames(loadtype="Eclipse 9-variable format")
-			wavetypecorrection()
+			textwavestowaves()
 			break
 		case "Eclipse 10-variable format":
 			LoadAllCSVs(loadtype="Eclipse 10-variable format")
 			StandardWaveNames(loadtype="Eclipse 10-variable format")
+			textwavestowaves()
 			break
 		case "Eclipse 20-variable format":
 			LoadAllCSVs(loadtype="Eclipse 20-variable format")
-			StandardWaveNames(loadtype="Eclipse 20-variable format")			
+			StandardWaveNames(loadtype="Eclipse 20-variable format")	
+			textwavestowaves()		
 			break
 		case "Multiple sheets in an Excel workbook":
 			XLLoad()
 			StandardWaveNames()
-			wavetypecorrection()
+			textwavestowaves()
 			break
 		case "All files in nested folders (CSV)":
 			navigatefolders("CSV")
 			StandardWaveNames()
-			wavetypecorrection()
+			textwavestowaves()
 			break
 		case "All files in nested folders (Excel)":
 			navigatefolders("Excel")
 			StandardWaveNames()
-			wavetypecorrection()
+			textwavestowaves()
 			break
 		case "All files in a folder (Excel)":
 			AutoLoadExcel()
 			StandardWaveNames()
-			wavetypecorrection()
+			textwavestowaves()
 			break
 		case "All files in a folder (CSV)":
 			LoadAllCSVs()
 			StandardWaveNames()
-			wavetypecorrection()
+			textwavestowaves()
 			break
 		case "Iontensity":
 			LoadAllExcel(loadtype="Iontensity")
 			StandardWaveNames(loadtype="Iontensity")
-			wavetypecorrection()
+			textwavestowaves()
 			break
 		default:
 			break

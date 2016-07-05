@@ -84,9 +84,58 @@ do
 			string wnt = wn+"text"
 			rename wa $wnt 
 			wave /T wt = $wnt
-			make /n=(numpnts(wt)) $wn
-			wave wnew = $wn
-			multithread wnew[]  =str2num(wt[p])
+			make /N=(numpnts(wt)) $wn
+			wave wa=$wn
+			variable commas,dots
+			commas=0
+			dots=0
+			make /n=(numpnts(wt)) /FREE comma
+			multithread comma = strsearch(wt,",",0)
+			wavestats /q comma
+			if (v_avg >0)
+				commas=v_avg
+				make /n=(numpnts(wt)) /FREE dot
+				multithread dot = strsearch(wt,".",0)
+				wavestats /q dot
+				if (v_avg>0)
+					dots=v_avg
+					if (dots<commas)
+						print "Dot is thousands separator and comma is decimal."
+						duplicate /FREE /T wt wttemp
+						wttemp = replacestring(".",wt,"")
+						wttemp = replacestring(",",wttemp,".")
+						wa=str2num(wttemp)
+						
+					else
+						print "Comma comes before dot; must be thousands separator."
+						duplicate /FREE /T wt wttemp
+						wttemp = replacestring(",",wttemp,"")
+						wa=str2num(wttemp)
+					endif
+				else
+					make /n=(numpnts(wt)) /FREE nextcomma
+					multithread nextcomma[] = strsearch(wt[p],"," ,comma[p]+1)
+					make /n=(numpnts(wt)) /O len
+					len = strlen(wt)
+					len[] = (comma[p]>0) ? len[p]-comma[p]-1 : NaN
+					len[] = (nextcomma[p] >0) ? nextcomma[p]-comma[p]-1 : len[p]
+					wavestats /q len
+					if (v_avg==3)
+						print "Comma is thousands separator"
+						duplicate /FREE /T wt wttemp
+						wttemp = replacestring(",",wttemp,"")
+						wa=str2num(wttemp)
+					else
+						print "Comma is probably decimal point"
+						duplicate /FREE /T wt wttemp
+						wttemp = replacestring(",",wttemp,".")
+						wa=str2num(wttemp)
+					endif
+				endif
+			else
+				wa=str2num(wt)
+			endif
+			
 		endif
 	endif
 	i+=1
@@ -166,8 +215,6 @@ do
 	corrwa[i] -= corrwa[0]
 	i+=1
 while (i<numpnts(watxt))
-//nvar timeunits = root:timeunits
-//timeunits = 3
 end
 
 function /S gettimelabel()
