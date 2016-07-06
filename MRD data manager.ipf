@@ -1139,7 +1139,7 @@ do
 				nvar /Z skip
 				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
 					nvar /Z names_standardized
-					if ( (!nvar_exists(names_standardized)) && (cmpstr(firstchanges,wavelist("*",";",""))==0) )
+					if ( (!nvar_exists(names_standardized)) && ( (!paramisdefault(loadtype)) || (cmpstr(firstchanges,wavelist("*",";",""))==0) ))
 						if (cmpstr(vwn,"No such wave")!=0)
 							wave v =$vwn
 							rename v Voltage
