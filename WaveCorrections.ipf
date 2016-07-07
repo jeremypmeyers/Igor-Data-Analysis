@@ -63,7 +63,7 @@ endif
 
 if (no_discharge_observed==1)
 	string howtofinddischarge
-	string menustr="No discharge in this sequence;Use separate status/mode wave to select;Select discharge steps from StepID"
+	string menustr="No discharge in this sequence;Use separate status/mode wave to select;Deduce for particular step IDs"
 	string dopromptstr="No negative currents detected"
 	string promptstr="Make selection for "+typename+":"+batteryname
 	prompt howtofinddischarge, promptstr,popup,menustr
@@ -114,7 +114,7 @@ if (no_discharge_observed==1)
 		prompt whichvalue,promptstr,popup,menustr
 		doprompt "Specify conditions for discharge",whichvalue
 		break
-	case "Select discharge steps from StepID":
+	case "Deduce for particular step IDs":
 		wave stepID
 		wave steps=getvalues(stepID)
 		wavestats /Q steps
@@ -128,33 +128,40 @@ if (no_discharge_observed==1)
 				steps = stepsreduced
 			endif
 		endif
+		
 		variable lastpoint = 0
 		variable si=0
+		wave voltage,runtime,current
+		duplicate /FREE steps vavg
+		duplicate /FREE steps dvdtstep
+		duplicate /FREE steps dischargestep
+		dischargestep=0
 		do
-			duplicate /FREE /o stepID step_pts
+			duplicate /FREE stepID step_pts
+			duplicate /FREE voltage vstep
+			vstep[] = (stepID[p]==steps[si]) ? voltage[p] : NaN
+			wavestats /q vstep
+			vavg[si] = v_avg
+			differentiate vstep /X=runtime /D=dvcalculated
+			wavestats /q dvcalculated
+			dvdtstep[si] = v_avg
+
 			step_pts[] = (stepID[p]==steps[si]) ? stepID[p] : NaN
 			wavestats /Q step_pts
+			
 			if (min(v_minloc,v_maxloc)>lastpoint)
 				lastpoint = min(v_minloc,v_maxloc)
 			endif
 
 			si+=1
 		while(si<numpnts(steps))
-		wave voltage,current,runtime
-		display /N=stepcheckchart /L=v voltage[0,lastpoint] vs runtime[0,lastpoint]
-		appendtograph /W=stepcheckchart /L=a current[0,lastpoint] vs runtime[0,lastpoint]
-		appendtograph /W=stepcheckchart /L=st stepID[0,lastpoint] vs runtime[0,lastpoint]
-	//	string cursorcount="{"
-	//	variable ci=0
-	//	do
-	//		cursorcount+=num2str(ci)+","
-	//		ci+=2
-	//	while(ci<numpnts(steps)/2)
-	//	cursorcount +="}"
-	//	showinfo/CP=$cursorcount /W=stepcheckchart
-		cleanaxes("stepcheckchart")
-		print steps
-		break
+
+		//wavestats /q vavg
+		//dischargestep[] = ( (vavg[p]<v_avg) || (dvdtstep[p] <0) ) ? 1 : 0
+		killwsv()
+		dischargestep[] = (dvdtstep[p] <0) ? 1 : 0
+		killwaves dvcalculated
+		print "Discharge steps",dischargestep
 	endswitch
 
 endif
@@ -193,7 +200,13 @@ do
 										current[]=(cmpstr(num2str(wav[p]),whichvalue)==0) ? -current[p] : current[p]
 									endif
 								break
-								case "Select discharge steps from StepID":
+								case "Deduce for particular step IDs":
+									si=0
+									wave current
+									do
+										current[] =( (stepid[p]==steps[si]) && (dischargestep[si]==1)) ?-current[p] : current[p]
+										si+=1
+									while(si<numpnts(Steps))
 								break
 							endswitch
 						endif
@@ -212,13 +225,101 @@ while(1)
 while (changesmade!=0)
 end
 
-function capacities()
-wave /z capacity,dischargecap,current,runtime,stepID
-differentiate /METH=2 /EP=1 capacity /X=runtime /D=curcompare
-make /N=(numpnts(capacity)) /FREE signcompare
-signcompare = sign(current)/sign(curcompare)
-signcompare[1,] = (stepID[p]==stepID[p-1]) ? signcompare[p] : NaN
-killwaves curcompare
+function capacitychecking()
+
+
+setdatafolder root:
+variable typeindex=0
+do
+	string typename= GetIndexedObjName(":",4,typeindex)
+	if (strlen(typename)==0)
+		break
+	endif
+	setdatafolder $typename
+	nvar /Z skip
+	if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
+			variable batteryindex=0
+			do
+				string batteryname=GetIndexedObjName(":",4,batteryindex)
+				if (strlen(batteryname)==0)
+					break
+				endif
+				setdatafolder $batteryname
+				nvar /Z skip
+				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
+					nvar /Z capacity_confirmed
+					if (!nvar_exists(capacity_confirmed)) //&& (cmpstr(firstchanges,wavelist("*",";",""))==0) )
+					print getdatafolder(1)
+					//handle capacities
+						wave /Z stepID,capacity,dischargecap,current,runtime
+						if (!waveexists(dischargecap)) //make a discharge capacity wave if we don't have one
+							duplicate /FREE capacity dischargecap
+						endif
+						
+						wave steporder=getsequence(stepID)
+						
+						duplicate /o capacity capcharge						
+						variable si=1
+						do
+							duplicate /FREE capacity capstepchange
+							capstepchange[0] = NaN
+							capstepchange[1,] =( (((stepID[p]==steporder[si])&&(stepID[p-1]==steporder[si-1])) && (capacity[p-1]!=0)) ) ? abs((capacity[p]-capacity[p-1])/capacity[p-1]) : NaN
+							wavestats /q capstepchange
+							print steporder[si-1],steporder[si],v_Avg
+							if (numtype(v_avg)==0)
+								if(v_avg<0.9)
+									//capacity is continuous, not reset with each step;need to fix								
+									duplicate /FREE stepID laststep
+									duplicate /FREE capacity lastcap
+									lastcap[0] = capacity[0]
+									lastcap[1,] = ( (stepID[p]==steporder[si])&&(stepID[p-1]==steporder[si-1]) ) ? capacity[p-1] : lastcap[p-1]
+									laststep[0] = stepID[0]
+									laststep[1,] = (stepID[p]!=stepID[p-1]) ? stepID[p-1] : laststep[p-1]
+									capcharge[1,] = ((stepid[p]==steporder[si])&&(laststep[p]==steporder[si-1]) )? capacity[p]-lastcap[p] : capcharge[p]
+								endif
+							endif
+							
+							si+=1
+						while(si<numpnts(steporder))
+						capcharge[1,] = (current[p] >=0) ? capcharge[p] : capcharge[p-1]
+
+						duplicate /o dischargecap capdischarge				
+						si=1
+						do
+							duplicate /FREE dischargecap capstepchange
+							capstepchange[0] = NaN
+							capstepchange[1,] =( (((stepID[p]==steporder[si])&&(stepID[p-1]==steporder[si-1])) && (dischargecap[p-1]!=0)) ) ? abs((dischargecap[p]-dischargecap[p-1])/dischargecap[p-1]) : NaN
+							wavestats /q capstepchange
+							if (numtype(v_avg)==0)
+								if(v_avg<0.9)
+									//capacity is continuous, not reset with each step;need to fix								
+									duplicate /FREE stepID laststep
+									duplicate /FREE capacity lastcap
+									lastcap[0] = capacity[0]
+									lastcap[1,] = ( (stepID[p]==steporder[si])&&(stepID[p-1]==steporder[si-1]) ) ? dischargecap[p-1] : lastcap[p-1]
+									laststep[0] = stepID[0]
+									laststep[1,] = (stepID[p]!=stepID[p-1]) ? stepID[p-1] : laststep[p-1]
+									capdischarge[1,] = ((stepid[p]==steporder[si])&&(laststep[p]==steporder[si-1]) )? dischargecap[p]-lastcap[p] : capdischarge[p]
+								endif
+							endif
+							
+							si+=1
+						while(si<numpnts(steporder))
+						capdischarge[1,] = (current[p] <=0) ? abs(capdischarge[p]) : abs(capdischarge[p-1])
+						killwsv()
+						variable /G capacity_confirmed =1
+						//changesmade+=1
+					endif
+				endif
+				batteryindex+=1
+				setdatafolder root:
+				setdatafolder $typename
+			while(1)
+	endif
+	setdatafolder root:
+	typeindex+=1
+while(1)
+
 end
 
 
@@ -228,11 +329,24 @@ make /n=(numpnts(wa)) / FREE WaveValues
 WaveValues[0] = wa[0]
 WaveValues[1,] = (wa[p]!=wa[p-1]) ? wa[p] : NAN
 sort WaveValues,WaveValues
-	duplicate /FREE WaveValues wv
-	multithread WaveValues[1,] = (wv[p]!=wv[p-1]) ? wv[p] : NaN
-	wavestats /q WaveValues
-	wavetransform zapNans WaveValues
-	killwsv()
+duplicate /FREE WaveValues wv
+multithread WaveValues[1,] = (wv[p]!=wv[p-1]) ? wv[p] : NaN
+wavestats /q WaveValues
+wavetransform zapNans WaveValues
+killwsv()
+return WaveValues
+end
+
+function /WAVE getsequence(wa)
+wave wa
+make /n=(numpnts(wa)) / FREE WaveValues
+WaveValues[0] = wa[0]
+WaveValues[1,] = (wa[p]!=wa[p-1]) ? wa[p] : NAN
+duplicate /FREE WaveValues wv
+multithread WaveValues[1,] = (wv[p]!=wv[p-1]) ? wv[p] : NaN
+wavestats /q WaveValues
+wavetransform zapNans WaveValues
+killwsv()
 return WaveValues
 end
 
