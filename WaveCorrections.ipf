@@ -51,11 +51,6 @@ do
 		typeindex+=1
 	while(1)
 
-	//if (v_flag==1)
-	//	Print "User clicked cancel"
-	//	Abort
-	//endif
-
 
 if (foundfolderwithwaves==0)
 	break
@@ -161,7 +156,6 @@ if (no_discharge_observed==1)
 		killwsv()
 		dischargestep[] = (dvdtstep[p] <0) ? 1 : 0
 		killwaves dvcalculated
-		print "Discharge steps",dischargestep
 	endswitch
 
 endif
@@ -226,8 +220,6 @@ while (changesmade!=0)
 end
 
 function capacitychecking()
-
-
 setdatafolder root:
 variable typeindex=0
 do
@@ -249,7 +241,6 @@ do
 				if ( (!nvar_exists(skip)) || ( (nvar_exists(skip)) && (skip!=1) ) )
 					nvar /Z capacity_confirmed
 					if (!nvar_exists(capacity_confirmed)) //&& (cmpstr(firstchanges,wavelist("*",";",""))==0) )
-					print getdatafolder(1)
 					//handle capacities
 						wave /Z stepID,capacity,dischargecap,current,runtime
 						if (!waveexists(dischargecap)) //make a discharge capacity wave if we don't have one
@@ -261,11 +252,10 @@ do
 						duplicate /o capacity capcharge						
 						variable si=1
 						do
-							duplicate /FREE capacity capstepchange
+							duplicate /FREE /o capacity capstepchange
 							capstepchange[0] = NaN
 							capstepchange[1,] =( (((stepID[p]==steporder[si])&&(stepID[p-1]==steporder[si-1])) && (capacity[p-1]!=0)) ) ? abs((capacity[p]-capacity[p-1])/capacity[p-1]) : NaN
 							wavestats /q capstepchange
-							print steporder[si-1],steporder[si],v_Avg
 							if (numtype(v_avg)==0)
 								if(v_avg<0.9)
 									//capacity is continuous, not reset with each step;need to fix								
@@ -282,11 +272,10 @@ do
 							si+=1
 						while(si<numpnts(steporder))
 						capcharge[1,] = (current[p] >=0) ? capcharge[p] : capcharge[p-1]
-
 						duplicate /o dischargecap capdischarge				
 						si=1
 						do
-							duplicate /FREE dischargecap capstepchange
+							duplicate /FREE /o dischargecap capstepchange
 							capstepchange[0] = NaN
 							capstepchange[1,] =( (((stepID[p]==steporder[si])&&(stepID[p-1]==steporder[si-1])) && (dischargecap[p-1]!=0)) ) ? abs((dischargecap[p]-dischargecap[p-1])/dischargecap[p-1]) : NaN
 							wavestats /q capstepchange
@@ -306,6 +295,9 @@ do
 							si+=1
 						while(si<numpnts(steporder))
 						capdischarge[1,] = (current[p] <=0) ? abs(capdischarge[p]) : abs(capdischarge[p-1])
+						duplicate /o capcharge rechargefactor
+						rechargefactor[] = (current[p] >=0) ? capcharge[p]/capdischarge[p] : Nan
+						waveclear capcharge, capdischarge, rechargefactor
 						killwsv()
 						variable /G capacity_confirmed =1
 						//changesmade+=1
@@ -359,7 +351,7 @@ textvalues[1,] = SelectString( (cmpstr(textwave[p],textwave[p-1])==0), textwave[
 sort /A textvalues,textvalues
 make /N=(numpnts(textvalues))/FREE strilen
 strilen = (strlen(textvalues)>0)
-wavestats /q strilen; print v_maxloc
+wavestats /q strilen;
 deletepoints 0,(v_maxloc), strilen,textvalues
 duplicate /FREE /T textvalues tv
 multithread textvalues[1,] = SelectString(  (cmpstr(tv[p],tv[p-1])==0), tv[p],"")

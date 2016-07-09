@@ -162,6 +162,8 @@ done=0
 			break
 	endswitch
 	timeconvert()
+	currentchecking()
+	capacitychecking()
 	if (cmpstr("Instron",loadtype)!=0)
 		createbaselinerunchart()
 	endif

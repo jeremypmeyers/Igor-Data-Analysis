@@ -20,7 +20,7 @@ loadwave /A /j /L={0,0,90,0,0} /P=$pathname  filename
 string smixed=s_wavenames
 
 variable numwaves=V_flag
-make /n=90 numberoftextwaves,stringlength
+make /n=90 /FREE numberoftextwaves,stringlength
 numberoftextwaves=0
 stringlength=0
 variable i=0
@@ -30,7 +30,7 @@ do
 		break
 	endif
 	wave /t tw=$textwn
-	make /n=(numpnts(tw)) nt,asl
+	make /n=(numpnts(tw)) /FREE nt,asl
 	multithread nt=(numtype(str2num(tw))==2)
 	multithread asl=nt*strlen(tw)
 	numberoftextwaves+=nt

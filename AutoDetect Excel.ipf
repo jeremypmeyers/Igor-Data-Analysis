@@ -66,14 +66,14 @@ i=0
 wn=stringfromlist(0,wl)
 wave /T wa=$wn
 //make /N=(numpnts(wa)) /o numberoftextwaves,totalstringlength
-make /n=(samplerow-firstrow) /o numberoftextwaves, totalstringlength
+make /n=(samplerow-firstrow) /FREE /o numberoftextwaves, totalstringlength
 numberoftextwaves=0
 totalstringlength=0
 variable numberofnumericwaves=0
 do
 		wn=stringfromlist(i,wl)
 		string wn2=stringfromlist(i,wl2)
-		if (strlen(wn)==0)
+		if ((strlen(wn)==0)||(strlen(wn2)==0))
 			break
 		endif
 		wave /T wa=$wn
@@ -105,15 +105,8 @@ if (numberoftextwaves[v_maxloc] > 0.5*itemsinlist(wl2))
 else
 	i=0
 	print "No header/wave name information in file."
-	do
-		wn = stringfromlist(i,wl)
-		if (strlen(wn)==0)
-			break
-		endif
-		wave /t wa = $wn
-		killwaves wa
-		i+=1
-	while(1)
+	killwaves /a/z
+	XLLoadWave /S=sn /Q /C=(samplerow) /o /R=($cellfirst,$celllast)/P=$pathname fn
 endif
 end
 
