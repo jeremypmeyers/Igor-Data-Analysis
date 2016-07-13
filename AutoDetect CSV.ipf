@@ -46,6 +46,9 @@ while(i<numwaves)
 	wavestats /q stringlength
 	if (numberoftextwaves[v_maxloc]>= (0.8*itemsinlist(smixed)) )
 		variable headerrow=v_maxloc
+	else
+		headerrow = 0
+	endif
 		i=0
 		string columninfostring=""
 		do
@@ -61,17 +64,4 @@ while(i<numwaves)
 		while(i<numwaves)
 		killwaves /a/z
 		loadwave /J/O/W/A/Q /B=ColumnInfoString /L={(headerrow),(firstdatarow),0,0,0} /P=$pathname  filename
-	else
-		print "No column headers provided"
-		i=0
-		do
-			string dw=stringfromlist(i,stext)
-			if (strlen(dw)==0)
-				break
-			endif
-			wave wa = $dw
-			killwaves wa
-			i+=1
-		while(1)
-	endif
 end
