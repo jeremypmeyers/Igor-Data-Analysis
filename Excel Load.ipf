@@ -145,7 +145,6 @@ function stopproc(ctrlname) : buttoncontrol
 		variable sheetchecked
 		controlinfo /W=sheetselect $checbxname
 		sheetchecked=V_value
-		print index, sheetchecked 
 		if (sheetchecked==1)
 			redimension /N=(numpnts(importedsheetnames)+1) importedsheetnames
 			importedsheetnames[(numpnts(importedsheetnames)-1)]=fullsheetnames[index]
@@ -159,8 +158,10 @@ end
 function InputSheets(filename,[loadtype])
 string filename
 string loadtype
+print filename
 string currentsheetname,currentfoldername,currentbattype
 wave/Z /T importedsheetnames
+print importedsheetnames
 variable /G startindex=0
 variable /G finishindex=numpnts(importedsheetnames)-1
 wave/Z /T batterynames
@@ -182,23 +183,15 @@ else
 	make /T /N=(numpnts(importedsheetnames)) foldernames
 endif 
 
-if (paramisdefault(loadtype) )
-	string leftcell=""
-	string  rightcolumn=""
-	variable headernamerow
-	variable deducetyperow
-	prompt leftcell, "What is the top left-most cell to input?"
-	prompt rightcolumn, "What's the right-most column to input?"
-	prompt headernamerow, "Which row contains wave/column header names?"
-	prompt deducetyperow, "Which row should we use to deduce whether a column is number or string?"
-	DoPrompt "Which rows and columns to input",leftcell, rightcolumn, headernamerow, deducetyperow
-	rightcolumn+="999999"
-elseif (cmpstr(loadtype,"Arbin")==0)
-	leftcell="A1"
-	rightcolumn="S999999"
-	headernamerow=1
-	deducetyperow=3
+if (!paramisdefault(loadtype) )
+	if (cmpstr(loadtype,"Arbin")==0)
+		string leftcell="A1"
+		string rightcolumn="S999999"
+		variable headernamerow=1
+		variable deducetyperow=3
+	 endif
 endif
+
 setdatafolder root:
 variable Qnamingprotocol=0
 if (!paramisdefault(loadtype))
@@ -226,11 +219,15 @@ if (!paramisdefault(loadtype))
 	endif
 endif
 
+string pathname	= filename[0,strsearch(filename,":",Inf,1)-1]
+NewPath ExcelPath , pathname	
+
 variable index=0
 do
 	setdatafolder root:
+	
 	currentsheetname=importedsheetnames[index]
-	nvar loadcount
+	nvar /Z loadcount
 	currentfoldername=""
 	string battypeprompt="Enter variable type for data from "+currentsheetname
 	if (Qnamingprotocol==1)
@@ -271,12 +268,16 @@ do
 	endif
 	
 	setdatafolder $currentbattype
-	nvar red,green,blue
+	nvar /z red,green,blue
 	variable r=red
 	variable g=green
 	variable b=blue
 	newdatafolder /o/s $currentfoldername
-	XLLoadWave/S=currentsheetname /R=($leftcell,$rightcolumn)/C=(deducetyperow)/W=(headernamerow)/D/Q filename
+	if (paramisdefault(loadtype))
+		xl(filename,"ExcelPath" ,"Specific sheet name",currentsheetname,0)
+	else
+		XLLoadWave/S=currentsheetname /R=($leftcell,$rightcolumn)/C=(deducetyperow)/W=(headernamerow)/D/Q filename
+	endif
 	notebook Recording text="Import from "
 	notebook Recording text=currentsheetname
 	notebook Recording text=" to "

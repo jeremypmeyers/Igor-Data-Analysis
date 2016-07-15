@@ -32,6 +32,8 @@ function GetData()
 	Notebook Recording specialChar={2,0,""}
 	Notebook Recording text="\r"
 	NewPanel /FLT /W=(100,100,385,360) /N=ImportWindow as "Data Import"	
+	setdatafolder root:
+	variable /G procedureversion = 1.0
 	//ModifyPanel cbRGB=(17476,17476,17476), fixedSize=1
 	ModifyPanel cbRGB=(32000,32000,32000),fixedsize=1
 	SetDrawLayer UserBack

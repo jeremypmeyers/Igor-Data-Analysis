@@ -137,8 +137,6 @@ i+=1
 while(i<numpnts(indices))
 
 sort filetypes, filetypes, filew
-print filew
-print filetypes
 end
 
 

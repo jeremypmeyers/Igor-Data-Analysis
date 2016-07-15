@@ -1244,7 +1244,7 @@ do
 					endif
 					appendtograph /W=$chartname /L=$ywaven ywave /TN=$yN vs xwave
 					modifygraph /W=$chartname rgb($yN) = (red,green,blue)
-					modifygraph /W=$chartname lstyle($yN)= batteryindex
+					modifygraph /W=$chartname lstyle($yN)= mod(batteryindex, 18)
 					if (strlen(legendtext)>0)
 						legendtext += "\r"
 					endif

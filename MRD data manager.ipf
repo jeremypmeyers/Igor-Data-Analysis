@@ -18,7 +18,7 @@ menu "Battery Analysis"
 		"Formation", Formation()
 		"Boost Charge", BoostCharge()
 		"Capacity Measurement", CapacityMeasurement()
-		"Cold Cranking Amps", ColdCrankingAmps()
+		"Cold Cranking Amps", CCA_HRD()
 		"Cold Charge Acceptance", ColdChargeAcceptance()
 	end
 	"Full-Sized Battery Cycling /3", Cycling()
@@ -1020,8 +1020,9 @@ if (paramisdefault(loadtype))
 	string discapmenustr = WaveList("*Dis*",";","") + nullstr + fullstr
 	string stepmenustr = WaveList("*Step*",";","") + nullstr + fullstr
 	string cyclemenustr = WaveList("*Cycle*",";","") + nullstr + fullstr
+	string tempmenustr= WaveList("*Temp*",";","")+nullstr + fullstr
 	string unitsmenu = "Seconds; Minutes; Hours;" 
-	string vwn,cwn,rtwn, rstwn, capwn, discapwn,stpwn,cycwn
+	string vwn,cwn,rtwn, rstwn, capwn, discapwn,stpwn,cycwn,tempwn
 	vwn=""
 	cwn=""
 	rtwn=""
@@ -1030,6 +1031,7 @@ if (paramisdefault(loadtype))
 	discapwn=""
 	stpwn=""
 	cycwn=""
+	tempwn=""
 	string rtu
 	prompt vwn, "Select voltage wave", popup, vmenustr
 	prompt cwn, "Select current wave", popup, curmenustr
@@ -1039,9 +1041,10 @@ if (paramisdefault(loadtype))
 	prompt discapwn, "Select discharge capacity if specialized wave exists", popup,discapmenustr
 	prompt stpwn, "Select index for step in program", popup, stepmenustr
 	prompt cycwn, "Select cycle counter for step in program", popup, cyclemenustr
+	prompt tempwn,"Select temperature wave",popup,tempmenustr
 	prompt rtu, "What units does data file report time in?", popup, unitsmenu 
 	if (foundfolderwithwaves != 0)
-		doprompt "Select wave names/units for this experiment",vwn,cwn,rtwn,rstwn,capwn,discapwn,stpwn,cycwn,rtu
+		doprompt "Select wave names/units for this experiment",vwn,cwn,rtwn,rstwn,capwn,discapwn,stpwn,cycwn,tempwn,rtu
 	endif
 	if (v_flag==1)
 		Print "User clicked cancel"
@@ -1059,6 +1062,7 @@ else //if paramisdefault
 			discapwn="No such wave"
 			stpwn = "Step"
 			cycwn = "Cycle"
+			tempwn = "Temperature_A1"
 			rtu = "Seconds"
 			break					// exit from switch			
 		case "Arbin":		// execute if case matches expression
@@ -1193,6 +1197,13 @@ do
 							changesmade +=1
 							waveclear cyc
 						endif		
+						
+						if (cmpstr(tempwn,"No such wave")!=0)
+							wave temp = $tempwn
+							rename temp Temperature
+							changesmade +=1
+							waveclear temp
+						endif
 						
 						string /G timeunit=rtu
 						
